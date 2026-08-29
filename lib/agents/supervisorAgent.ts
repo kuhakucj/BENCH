@@ -3,6 +3,8 @@ import type { ProjectSpec } from "@/lib/schemas/projectSpec";
 import { z } from "zod";
 import { supervisorPrompt } from "./prompts";
 import { completeStructured } from "./structuredOutput";
+import { failedKnowledgeChecks, runKnowledgeChecks } from "@/lib/knowledge/validation";
+import type { KnowledgeCheck } from "@/lib/knowledge/schema";
 
 export type SupervisorResult = {
   verified: boolean;
@@ -16,8 +18,11 @@ const SupervisorResultSchema = z.object({
   correctionsNeeded: z.array(z.string())
 });
 
-function deterministicFindings(spec: ProjectSpec): string[] {
+function deterministicFindings(spec: ProjectSpec, knowledgeChecks: KnowledgeCheck[]): string[] {
   const findings: string[] = [];
+  for (const knowledgeCheck of failedKnowledgeChecks(knowledgeChecks)) {
+    findings.push(`Knowledge check failed: ${knowledgeCheck.message}`);
+  }
   const firmwareText = spec.firmware.files.map((file) => file.contents).join("\n");
   for (const pin of spec.circuit.pins) {
     if (/power|ground/i.test(pin.mode)) continue;
@@ -70,11 +75,13 @@ function deterministicFindings(spec: ProjectSpec): string[] {
 
 export async function supervisorAgent(spec: ProjectSpec) {
   const model = createModelClient();
-  const deterministic = deterministicFindings(spec);
+  const knowledgeChecks = runKnowledgeChecks(spec);
+  spec.grounding.checks = knowledgeChecks;
+  const deterministic = deterministicFindings(spec, knowledgeChecks);
   const fallback: SupervisorResult = {
-    verified: spec.verification.verified && deterministic.every((finding) => !finding.includes("does not appear")),
+    verified: spec.verification.verified && deterministic.length === 0,
     findings: deterministic.length ? deterministic : ["Hardware, wiring, firmware symbols, and PlatformIO target are internally consistent."],
-    correctionsNeeded: deterministic.filter((finding) => finding.includes("does not appear"))
+    correctionsNeeded: deterministic
   };
   const supervisorInput = {
     ...spec,

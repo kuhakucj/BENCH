@@ -6,6 +6,24 @@ One-day hackathon MVP for a beginner-focused AI platform that takes a physical-c
 
 The existing static `.dc.html` design files are preserved as visual references. The working MVP is now a Next.js app.
 
+## Grounded Electronics Knowledge
+
+BENCH does not ask the model to recall electrical specifications from memory. A reviewed MVP catalog in `knowledge/electronics.json` contains structured board voltage, PlatformIO target, verified pin, ADC/PWM, divider, power, and driver facts with source metadata. It covers the supported beginner set: ESP32, Uno, Nano, Pico, LDR, ultrasonic, button, potentiometer, TMP36, PIR, LED, buzzer, SG90, DC motor, and common supporting parts.
+
+`lib/knowledge/retrieval.ts` selects only the facts needed by each specialist. `lib/knowledge/validation.ts` then checks safety-critical values deterministically. Failed voltage, pin, ADC, target, divider, LED-resistor, ultrasonic-level, or motor-driver checks block `READY TO BUILD`, regardless of what the LLM says.
+
+```text
+USER IDEA
+  -> role-specific knowledge retrieval
+  -> Nosana specialist reasons over retrieved facts
+  -> canonical project_spec.json
+  -> Daytona compile and repair
+  -> deterministic knowledge checks + Supervisor
+  -> READY TO BUILD
+```
+
+The UI keeps this beginner-friendly: important choices expose collapsed `Why this?` explanations and direct source links, while detailed knowledge checks stay inspectable in the activity rail.
+
 ## Sponsor Infrastructure
 
 ### Nosana - AI Compute
@@ -80,6 +98,7 @@ If Nosana is removed, the app loses its specialist AI engineering team. The loca
 Every run produces a canonical `project_spec.json` under `generated/<project-id>/` plus:
 
 - `circuit.json`
+- `grounding.json` with role-specific evidence, sources, decisions, and deterministic checks
 - generated PlatformIO firmware files
 - verification logs and supervisor findings
 

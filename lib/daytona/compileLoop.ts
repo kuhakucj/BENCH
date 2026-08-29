@@ -87,7 +87,7 @@ export async function runDaytonaCompileLoop(initialSpec: ProjectSpec, maxAttempt
       }
 
       events.push({ role: "Daytona", status: "error", message: "Compilation failed; sending compiler output back to Firmware Engineer", detail: log.slice(0, 600) });
-      const repaired = await firmwareAgent(spec.idea, spec.hardware, spec.circuit, log);
+      const repaired = await firmwareAgent(spec.idea, spec.hardware, spec.circuit, log, [], spec.grounding.firmware);
       spec.firmware = repaired.output;
       events.push({ role: "Firmware Engineer", status: "running", message: "Repairing firmware from Daytona compiler output" });
     }

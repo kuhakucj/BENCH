@@ -15,7 +15,7 @@ export const fallbackHardware: ProjectSpec["hardware"] = {
     { mcu: "ESP32 DevKit v1", fit: "Best", rationale: "3.3V logic, analog input, USB serial, fast iteration, and enough room to later add BLE/Wi-Fi." },
     { mcu: "Arduino Uno", fit: "Good", rationale: "Easy analog reading, but 5V logic makes browser/modern expansion less flexible." },
     { mcu: "Arduino Nano", fit: "Good", rationale: "Small and beginner friendly, but less headroom than ESP32." },
-    { mcu: "Raspberry Pi", fit: "Poor", rationale: "Overkill and lacks native analog input without extra ADC hardware." }
+    { mcu: "Raspberry Pi Pico", fit: "Good", rationale: "Has native ADC and plenty of GPIO, but the base Pico lacks the ESP32's built-in wireless options." }
   ],
   constraints: ["Use only 3.3V on the ESP32 analog pin.", "GPIO34 is input-only, which is fine for an LDR signal.", "Browser control requires Web Serial or a small local bridge."],
   power: "USB powers the ESP32. The LDR divider uses ESP32 3V3 and GND.",
@@ -36,9 +36,7 @@ export const fallbackCircuit: CircuitSpec = {
     { from: "10k resistor leg B", to: "ESP32 GND", signal: "ground", wireColor: "black" }
   ],
   pins: [
-    { component: "Light sensor divider", pin: "midpoint", boardPin: "GPIO34", mode: "analog input", firmwareSymbol: "SENSOR_PIN" },
-    { component: "Divider resistor", pin: "ground side", boardPin: "GND", mode: "ground" },
-    { component: "LDR", pin: "supply side", boardPin: "3V3", mode: "power" }
+    { component: "Light sensor divider", pin: "midpoint", boardPin: "GPIO34", mode: "analog input", firmwareSymbol: "LIGHT_SENSOR_PIN" }
   ],
   protocols: ["ADC", "USB Serial"],
   warnings: ["Do not connect the divider to 5V on ESP32.", "GPIO34 cannot drive outputs; use it only as an input."]
@@ -61,7 +59,7 @@ monitor_speed = 115200
       path: "src/main.cpp",
       contents: `#include <Arduino.h>
 
-const int SENSOR_PIN = 34;
+const int LIGHT_SENSOR_PIN = 34;
 const int THRESHOLD = 1800;
 bool lastJump = false;
 
@@ -72,7 +70,7 @@ void setup() {
 }
 
 void loop() {
-  int lightValue = analogRead(SENSOR_PIN);
+  int lightValue = analogRead(LIGHT_SENSOR_PIN);
   bool covered = lightValue < THRESHOLD;
 
   if (covered != lastJump) {

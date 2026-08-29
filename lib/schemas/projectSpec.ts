@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ProjectGroundingSchema } from "@/lib/knowledge/schema";
 
 export const CircuitSchema = z.object({
   board: z.object({
@@ -66,6 +67,7 @@ export const ProjectSpecSchema = z.object({
   hardware: HardwareSchema,
   circuit: CircuitSchema,
   firmware: FirmwareSchema,
+  grounding: ProjectGroundingSchema,
   verification: z.object({
     verified: z.boolean(),
     compileProvider: z.enum(["daytona", "local", "mock"]),
