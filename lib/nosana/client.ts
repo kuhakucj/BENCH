@@ -25,6 +25,7 @@ export function createModelClient(): ModelClient {
     provider: config.provider,
     async completeJson<T>(messages: ChatMessage[], fallback: T): Promise<T> {
       if (config.provider !== "nosana" || !config.endpoint) {
+        // Explicit development fallback; provider remains "mock" in agent activity and artifacts.
         return fallback;
       }
 

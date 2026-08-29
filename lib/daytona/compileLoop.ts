@@ -31,6 +31,7 @@ export async function runDaytonaCompileLoop(initialSpec: ProjectSpec, maxAttempt
       message: mockAllowed ? "Daytona credentials missing; demo dry run completed without verified build" : "Daytona credentials missing; real compile skipped",
       detail: "Set DAYTONA_API_KEY to enable real sandbox creation and PlatformIO compilation."
     });
+    // Development dry runs are useful, but missing Daytona can never produce verified firmware.
     spec.verification = {
       verified: false,
       compileProvider: mockAllowed ? "mock" : "daytona",
@@ -76,6 +77,7 @@ export async function runDaytonaCompileLoop(initialSpec: ProjectSpec, maxAttempt
       spec.verification.attempts = attempt;
 
       if (result && result.exitCode === 0) {
+        // GENERATED != VERIFIED: only a successful command inside Daytona may set this flag.
         spec.verification.verified = true;
         events.push({
           role: "Daytona",
