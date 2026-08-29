@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESCAPE — BENCH hardware controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --accent: #CCFF00;
+    --bg: #0A0A0B;
+    --panel: #0E0E10;
+    --raised: #141416;
+    --line: #232325;
+    --line-soft: #1A1A1C;
+    --fg: #F4F4F2;
+    --fg-dim: #A8A8AC;
+    --fg-faint: #6E6E72;
+    --fg-ghost: #4A4A4E;
+    --sans: 'Space Grotesk', system-ui, Arial, sans-serif;
+    --mono: 'IBM Plex Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); height: 100%; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+  ::selection { background: var(--accent); color: var(--bg); }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* ---------- top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 16px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 28px; height: 28px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: 2px; }
+  .divider { width: 1px; height: 20px; background: var(--line); }
+  .path { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); }
+  .spacer { flex-grow: 1; }
+  .chip { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid #2A2A2D; font-family: var(--mono); font-size: 11px; color: var(--fg-dim); letter-spacing: .5px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot.live { background: var(--accent); }
+  .dot.idle { background: #3A3A3E; }
+  .btn { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; border: 1px solid #2A2A2D; color: var(--fg); }
+  .btn:hover { border-color: #3E3E42; }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* ---------- phase strip ---------- */
+  .phasebar { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 20px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .phase-step { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; color: var(--fg-ghost); }
+  .phase-step .n { width: 16px; height: 16px; border: 1px solid #3A3A3E; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+  .phase-step.done { color: var(--fg-dim); }
+  .phase-step.done .n { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .phase-step.now { color: var(--fg); }
+  .phase-step.now .n { border-color: var(--accent); color: var(--accent); }
+  .phase-arrow { color: #38383C; font-size: 11px; }
+
+  /* ---------- layout ---------- */
+  .main { display: flex; flex-grow: 1; min-height: 0; }
+  .stage { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
+  .stage-head { display: flex; align-items: center; gap: 14px; padding: 10px 20px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; color: var(--fg-faint); }
+
+  /* recall grid */
+  .board-wrap { flex-grow: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 12px; width: min(72vh, 560px); height: min(72vh, 560px); }
+  .tile {
+    position: relative; border: 1px solid #2A2A2D; background: var(--raised);
+    display: flex; align-items: flex-end; justify-content: flex-start; padding: 10px;
+    transition: background-color 90ms ease, border-color 90ms ease, box-shadow 220ms ease;
+  }
+  .tile:hover { border-color: #3E3E42; }
+  .tile .key { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--fg-faint); transition: color 90ms ease; }
+  .tile.lit {
+    background: var(--accent); border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(204,255,0,.16), 0 0 26px 3px rgba(204,255,0,.5);
+    animation: tilePop 320ms cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .tile.lit .key { color: var(--bg); }
+  .tile.wrong {
+    background: var(--fg); border-color: var(--fg);
+    box-shadow: 0 0 26px 3px rgba(244,244,242,.35);
+    animation: tileShake 340ms ease;
+  }
+  .tile.wrong .key { color: var(--bg); }
+
+  @keyframes tilePop {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.14); }
+    65%  { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tileShake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-6px); }
+    30% { transform: translateX(5px); }
+    45% { transform: translateX(-4px); }
+    60% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+  }
+
+  /* runner canvas */
+  .canvas-wrap { flex-grow: 1; min-height: 0; position: relative; padding: 8px 10px; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .round-pip { width: 8px; height: 8px; border: 1px solid #3A3A3E; }
+
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10,10,11,.9); text-align: center; padding: 24px; }
+  .overlay.hidden { display: none; }
+  .overlay h1 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: 5px; }
+  .overlay h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 3px; color: var(--accent); }
+  .overlay p { margin: 0; max-width: 440px; font-size: 13.5px; line-height: 1.6; color: var(--fg-dim); }
+  .overlay .kbd-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  kbd { font-family: var(--mono); font-size: 11px; padding: 4px 8px; border: 1px solid #2A2A2D; color: var(--fg); background: var(--raised); }
+  .keymap-mini { display: grid; grid-template-columns: repeat(4, 26px); grid-template-rows: repeat(4, 26px); gap: 4px; }
+  .keymap-mini span { display: flex; align-items: center; justify-content: center; border: 1px solid #2A2A2D; font-family: var(--mono); font-size: 10px; color: var(--fg-dim); }
+
+  /* ---------- side panel ---------- */
+  .panel { width: 340px; flex-shrink: 0; border-left: 1px solid var(--line); display: flex; flex-direction: column; overflow-y: auto; }
+  .section { border-bottom: 1px solid var(--line); padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+  .row { display: flex; align-items: baseline; gap: 10px; }
+  .row .k { font-size: 12.5px; color: var(--fg-dim); }
+  .row .v { font-family: var(--mono); font-size: 13px; color: var(--fg); margin-left: auto; }
+  .row .v.accent { color: var(--accent); }
+  .meter { height: 6px; background: #1A1A1C; position: relative; overflow: hidden; }
+  .meter > i { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); display: block; }
+  .meter > u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--fg); opacity: .55; }
+  .seg { display: flex; border: 1px solid #2A2A2D; width: 100%; }
+  .seg button { flex: 1; padding: 7px 0; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; color: var(--fg-faint); text-align: center; }
+  .seg button.on { background: var(--accent); color: var(--bg); font-weight: 700; }
+  .log { font-family: var(--mono); font-size: 11px; line-height: 1.65; color: var(--fg-dim); height: 120px; overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 2px; }
+  .log .t { color: #56565A; }
+  .log .out { color: var(--accent); }
+  .log .in { color: var(--fg-dim); }
+  .log .err { color: var(--fg); }
+  .help { display: flex; flex-direction: column; gap: 7px; }
+  .help div { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--fg-dim); }
+  .help kbd { min-width: 42px; text-align: center; }
+  .note { font-size: 11.5px; line-height: 1.55; color: var(--fg-faint); }
+  .note b { color: var(--fg-dim); font-weight: 600; }
+  code { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-top: 1px solid var(--line); flex-shrink: 0; margin-top: auto; }
+  .stat-grid > div { padding: 11px 14px; display: flex; flex-direction: column; gap: 3px; border-right: 1px solid var(--line); }
+  .stat-grid > div:last-child { border-right: none; }
+  .stat-grid .sl { font-family: var(--mono); font-size: 9px; letter-spacing: 1px; color: var(--fg-faint); }
+  .stat-grid .sv { font-family: var(--mono); font-size: 15px; color: var(--fg); }
+
+  @media (max-width: 1000px) {
+    .main { flex-direction: column; }
+    .panel { width: 100%; border-left: none; border-top: 1px solid var(--line); }
+    body { overflow: auto; }
+    .canvas-wrap { height: 60vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2"><rect x="7" y="7" width="10" height="10"></rect><path d="M9 7V4M15 7V4M9 20v-3M15 20v-3M7 9H4M7 15H4M20 9h-3M20 15h-3"></path></svg></div>
+    <span class="brand-name">BENCH</span>
+  </div>
+  <div class="divider"></div>
+  <span class="path">Project_Bench / escape</span>
+  <div class="spacer"></div>
+  <div class="chip"><span class="dot idle" id="srcDot"></span><span id="srcLabel">KEYBOARD</span></div>
+  <button class="btn primary" id="connectBtn">CONNECT ARDUINO</button>
+</div>
+
+<div class="phasebar">
+  <div class="phase-step" id="stepRecall"><span class="n">1</span>RECALL — 4×4 matrix</div>
+  <span class="phase-arrow">→</span>
+  <div class="phase-step" id="stepRunout"><span class="n">2</span>RUNOUT — joystick</div>
+  <div class="spacer"></div>
+  <span class="label" id="phaseHint">crack the 3-round sequence to unlock the run</span>
+</div>
+
+<div class="main">
+
+  <div class="stage">
+    <div class="stage-head">
+      <span class="label" id="stageLabel">RECALL</span>
+      <span class="label" style="color:var(--fg-ghost)" id="stageSub">memorize the order, then repeat it</span>
+      <div class="spacer"></div>
+      <span class="label" id="statHead1Label">ROUND</span>
+      <span style="font-family:var(--mono);font-size:14px;color:var(--fg)" id="statHead1">—</span>
+      <span class="label" style="margin-left:16px" id="statHead2Label">BEST</span>
+      <span style="font-family:var(--mono);font-size:14px;color:var(--fg-dim)" id="statHead2">—</span>
+    </div>
+
+    <!-- PHASE 1: RECALL -->
+    <div class="board-wrap" id="recallStage">
+      <div class="grid" id="grid"></div>
+      <div class="overlay" id="recallOverlay">
+        <h1>RECALL</h1>
+        <p>Three rounds. The board lights a sequence on the 4×4 matrix — watch it, then press
+           it back in order. Clear round 3 and the run unlocks.</p>
+        <p style="color:var(--fg-faint)">No hardware connected yet — you're in keyboard test mode.</p>
+        <div class="keymap-mini" id="keymapMini"></div>
+        <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">start</span></div>
+      </div>
+    </div>
+
+    <!-- PHASE 2: RUNOUT -->
+    <div class="canvas-wrap hidden" id="runoutStage">
+      <canvas id="game"></canvas>
+      <div class="overlay hidden" id="runoutOverlay">
+        <h2>UNLOCKED</h2>
+        <p>Three rounds cracked. Now get out — jump the hurdles, stay grounded under the beams.</p>
+        <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">jump / run</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+
+    <!-- RECALL panel -->
+    <div id="recallPanel">
+      <div class="section">
+        <span class="label">INPUT SOURCE</span>
+        <div class="seg"><button id="srcKeyboard" class="on">KEYBOARD</button><button id="srcSerial">SERIAL</button></div>
+        <div class="note" id="srcNote">The keyboard maps 1:1 onto the 4×4 grid — every press runs through the same handler a real <code>K:&lt;n&gt;</code> line will.</div>
+      </div>
+      <div class="section">
+        <span class="label">MATRIX — 2PH132524A</span>
+        <div class="row"><span class="k">Last button</span><span class="v accent" id="vLastKey">—</span></div>
+        <div class="row"><span class="k">Presses this round</span><span class="v" id="vPresses">0</span></div>
+        <div class="row"><span class="k">Playback speed</span><span class="v" id="vSpeed">—</span></div>
+        <div class="seg"><button id="chatterOff" class="on">CLEAN</button><button id="chatterOn">SIMULATE CHATTER</button></div>
+        <div class="note">Real matrix keypads bounce. Chatter mode injects 2–4 duplicate presses per key so you can confirm the debounce window holds before hardware.</div>
+      </div>
+      <div class="section">
+        <span class="label">SEQUENCE</span>
+        <div class="row"><span class="k">Length this round</span><span class="v" id="vSeqLen">—</span></div>
+        <div class="row"><span class="k">Correct so far</span><span class="v accent" id="vInputIdx">—</span></div>
+      </div>
+    </div>
+
+    <!-- RUNOUT panel -->
+    <div id="runoutPanel" class="hidden">
+      <div class="section">
+        <span class="label">CONTROL — JOYSTICK (SW)</span>
+        <div class="row"><span class="k">Last click</span><span class="v accent" id="vState">—</span></div>
+        <div class="row"><span class="k">Triggers</span><span class="v" id="vTriggers">0</span></div>
+        <div class="seg"><button id="noiseOff" class="on">CLEAN</button><button id="noiseOn">SIMULATE CHATTER</button></div>
+        <div class="note">Joystick click switches bounce like any mechanical button — one physical press briefly firing twice. Chatter mode fakes that, so you can confirm the debounce swallows it as one trigger, not several.</div>
+      </div>
+      <div class="section">
+        <span class="label">RUN</span>
+        <div class="row"><span class="k">Survived</span><span class="v accent" id="vSurvived">0.0s</span></div>
+        <div class="row"><span class="k">Speed</span><span class="v" id="vRunSpeed">—</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <span class="label">SERIAL LOG</span>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div id="recallHelp">
+      <div class="section">
+        <span class="label">KEYBOARD TEST</span>
+        <div class="help">
+          <div><kbd>1234</kbd> row 1</div><div><kbd>qwer</kbd> row 2</div>
+          <div><kbd>asdf</kbd> row 3</div><div><kbd>zxcv</kbd> row 4</div>
+          <div><kbd>SPACE</kbd> start / restart</div>
+        </div>
+      </div>
+      <div class="section" style="border-bottom:none">
+        <span class="label">SERIAL CONTRACT — MATRIX</span>
+        <div class="note">
+          Plain line protocol at <b>115200 baud</b>. Firmware and wiring are deliberately left out.
+          <br><br><b>Board → page</b><br><code>K:&lt;0-15&gt;</code> button press, row-major index<br><code>READY</code> handshake<br><br>
+          Same serial connection carries phase 2's protocol below — one board, two inputs.
+        </div>
+      </div>
+    </div>
+
+    <div id="runoutHelp" class="hidden">
+      <div class="section">
+        <span class="label">KEYBOARD TEST</span>
+        <div class="help">
+          <div><kbd>SPACE</kbd> jump — same trigger the joystick click sends</div>
+          <div><kbd>N</kbd> toggle click chatter</div>
+        </div>
+      </div>
+      <div class="section" style="border-bottom:none">
+        <span class="label">SERIAL CONTRACT — CONTROL</span>
+        <div class="note">
+          <b>Board → page</b><br><code>J:1</code> joystick clicked (jump trigger)<br><br>
+          That's the whole contract — a single momentary click is the only signal this phase
+          needs. No distance math, no state to track, on either end.
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div><span class="sl">PHASE</span><span class="sv" id="vPhase">RECALL</span></div>
+      <div><span class="sl">STATE</span><span class="sv" id="vGameState">MENU</span></div>
+      <div><span class="sl">RUNS</span><span class="sv" id="vRuns">0</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   SHARED HELPERS
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+function nowMs() { return performance.now(); }
+function stamp() { const d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":"); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+const logEl = $("log");
+const logLines = [];
+function log(kind, text) {
+  logLines.push({ kind, text, t: stamp() });
+  if (logLines.length > 140) logLines.shift();
+  logEl.innerHTML = logLines.slice().reverse().map(l => `<div><span class="t">${l.t}</span> <span class="${l.kind}">${l.text}</span></div>`).join("");
+}
+
+const CFG = {
+  baudRate: 115200,
+  debounceMs: 140,
+  litMs: 420, gapMs: 220, speedFloorMs: 260, speedStepMs: 14,
+  triggerCooldownMs: 220, // joystick click debounce — mechanical switches bounce
+};
+
+let appPhase = "recall"; // "recall" | "runout"
+let runs = Number(localStorage.getItem("escape.runs") || 0);
+
+function setPhaseChrome(p) {
+  appPhase = p;
+  $("recallStage").classList.toggle("hidden", p !== "recall");
+  $("runoutStage").classList.toggle("hidden", p !== "runout");
+  $("recallPanel").classList.toggle("hidden", p !== "recall");
+  $("runoutPanel").classList.toggle("hidden", p !== "runout");
+  $("recallHelp").classList.toggle("hidden", p !== "recall");
+  $("runoutHelp").classList.toggle("hidden", p !== "runout");
+  $("stepRecall").className = "phase-step " + (p === "recall" ? "now" : "done");
+  $("stepRunout").className = "phase-step " + (p === "runout" ? "now" : "");
+  $("phaseHint").textContent = p === "recall" ? "crack the 3-round sequence to unlock the run" : "make it out — one hit ends the run";
+  $("vPhase").textContent = p.toUpperCase();
+  if (p === "recall") {
+    $("stageLabel").textContent = "RECALL"; $("stageSub").textContent = "memorize the order, then repeat it";
+    $("statHead1Label").textContent = "ROUND"; $("statHead2Label").textContent = "ROUNDS";
+    if (source !== serialSrc) setSource(keyboardMatrix); // don't kick real hardware off on phase change
+  } else {
+    $("stageLabel").textContent = "RUNOUT"; $("stageSub").textContent = "jump the hurdles, stay under the beams";
+    $("statHead1Label").textContent = "TIME"; $("statHead2Label").textContent = "BEST";
+    if (source !== serialSrc) setSource(keyboardSensor);
+    fitCanvas();
+  }
+}
+
+/* ============================================================
+   PHASE 1 — RECALL (4x4 matrix, capped at 3 rounds)
+   ============================================================ */
+const KEYROWS = [["1","2","3","4"], ["q","w","e","r"], ["a","s","d","f"], ["z","x","c","v"]];
+const KEY_TO_IDX = {};
+KEYROWS.forEach((row, r) => row.forEach((k, c) => { KEY_TO_IDX[k] = r * 4 + c; }));
+const RECALL_ROUNDS = 3;
+
+const gridEl = $("grid");
+const tiles = [];
+for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+  const idx = r * 4 + c;
+  const el = document.createElement("div");
+  el.className = "tile"; el.dataset.idx = idx;
+  el.innerHTML = `<span class="key">${KEYROWS[r][c].toUpperCase()}</span>`;
+  el.addEventListener("click", () => handleMatrixPress(idx));
+  gridEl.appendChild(el);
+  tiles.push(el);
+}
+const keymapMini = $("keymapMini");
+KEYROWS.flat().forEach(k => { const s = document.createElement("span"); s.textContent = k.toUpperCase(); keymapMini.appendChild(s); });
+
+function litTile(idx, cls, ms) { const el = tiles[idx]; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+
+const recall = {
+  state: "menu", // menu | playback | input | paused | gameover | cleared
+  sequence: [], inputIdx: 0, presses: 0,
+  playbackToken: 0,
+
+  speedForRound(len) { return Math.max(CFG.speedFloorMs, CFG.litMs - len * CFG.speedStepMs); },
+
+  async start() {
+    this.sequence = []; runs++; localStorage.setItem("escape.runs", runs);
+    log("in", "recall started");
+    this.addStep();
+    await this.playback();
+  },
+  addStep() { this.sequence.push(Math.floor(Math.random() * 16)); },
+
+  async playback() {
+    this.state = "playback"; this.inputIdx = 0; this.presses = 0; updateRecallHud();
+    const token = ++this.playbackToken;
+    await sleep(320);
+    const speed = this.speedForRound(this.sequence.length);
+    for (const idx of this.sequence) {
+      if (token !== this.playbackToken) return;
+      litTile(idx, "lit", speed);
+      await sleep(speed); await sleep(CFG.gapMs);
+    }
+    if (token !== this.playbackToken) return;
+    this.state = "input"; updateRecallHud();
+  },
+
+  press(idx) {
+    if (this.state !== "input") return;
+    this.presses++; litTile(idx, "lit", 180);
+    if (idx === this.sequence[this.inputIdx]) {
+      this.inputIdx++; updateRecallHud();
+      if (this.inputIdx === this.sequence.length) this.roundClear();
+    } else {
+      litTile(idx, "wrong", 260);
+      this.fail();
+    }
+  },
+
+  async roundClear() {
+    if (this.sequence.length >= RECALL_ROUNDS) { this.cleared(); return; }
+    this.state = "paused"; updateRecallHud();
+    await sleep(500);
+    this.addStep();
+    await this.playback();
+  },
+
+  fail() {
+    this.state = "gameover"; updateRecallHud();
+    log("err", `wrong button — round ${this.sequence.length}`);
+    showRecallOverlay("gameover");
+  },
+
+  cleared() {
+    this.state = "cleared"; updateRecallHud();
+    log("in", "all 3 rounds cleared — runout unlocked");
+    showRecallOverlay("cleared");
+  }
+};
+
+function updateRecallHud() {
+  $("statHead1").textContent = recall.sequence.length || "—";
+  $("statHead2").textContent = RECALL_ROUNDS;
+  $("vSeqLen").textContent = recall.sequence.length || "—";
+  $("vInputIdx").textContent = recall.state === "input" ? (recall.inputIdx + " / " + recall.sequence.length) : "—";
+  $("vPresses").textContent = recall.presses;
+  $("vSpeed").textContent = recall.sequence.length ? recall.speedForRound(recall.sequence.length) + " ms" : "—";
+  $("vGameState").textContent = recall.state.toUpperCase();
+  $("vRuns").textContent = runs;
+}
+
+const recallOv = $("recallOverlay");
+function hideRecallOverlay() { recallOv.classList.add("hidden"); }
+function showRecallOverlay(kind) {
+  recallOv.classList.remove("hidden");
+  if (kind === "gameover") {
+    recallOv.innerHTML = `<h2>WRONG BUTTON</h2><p>Round ${recall.sequence.length} of ${RECALL_ROUNDS}. Back to round 1.</p>
+      <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">try again</span></div>`;
+  } else if (kind === "cleared") {
+    recallOv.innerHTML = `<h2>SEQUENCE CRACKED</h2><p>All ${RECALL_ROUNDS} rounds. The run unlocks now.</p>
+      <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">go</span></div>`;
+  } else {
+    recallOv.innerHTML = `<h1>RECALL</h1><p>Three rounds. The board lights a sequence on the 4×4 matrix — watch it, then press
+       it back in order. Clear round 3 and the run unlocks.</p>
+       <p style="color:var(--fg-faint)">No hardware connected yet — you're in keyboard test mode.</p>
+       <div class="keymap-mini" id="keymapMini2"></div>
+       <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">start</span></div>`;
+    const mini = $("keymapMini2");
+    KEYROWS.flat().forEach(k => { const s = document.createElement("span"); s.textContent = k.toUpperCase(); mini.appendChild(s); });
+  }
+}
+
+let lastPressAt = -1e9, lastPressIdx = -1;
+function handleMatrixPress(idx) {
+  const t = nowMs();
+  const isRepeat = idx === lastPressIdx && (t - lastPressAt) < CFG.debounceMs;
+  lastPressAt = t; lastPressIdx = idx;
+  if (isRepeat) { log("err", `K:${idx} debounced (chatter)`); return; }
+  $("vLastKey").textContent = KEYROWS[Math.floor(idx / 4)][idx % 4].toUpperCase() + "  (K:" + idx + ")";
+
+  if (recall.state === "menu" || recall.state === "gameover") { hideRecallOverlay(); recall.start(); return; }
+  if (recall.state === "cleared") { advanceToRunout(); return; }
+  recall.press(idx);
+}
+
+let chatterOn = false;
+function fireChatter(idx) {
+  const n = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < n; i++) setTimeout(() => handleMatrixPress(idx), 8 + i * 14);
+}
+
+/* ============================================================
+   PHASE TRANSITION
+   ============================================================ */
+function advanceToRunout() {
+  log("in", "→ runout phase");
+  setPhaseChrome("runout");
+  showRunoutOverlay("intro");
+}
+
+/* ============================================================
+   PHASE 2 — RUNOUT (joystick click jump trigger, endless)
+   A joystick's SW pin is just a momentary switch — press and let go.
+   There's no continuous value to smooth or threshold like a distance
+   sensor would need; every click is debounced (mechanical switches
+   bounce) and, if it isn't inside the cooldown window, becomes a jump.
+   ============================================================ */
+const jumpBus = {
+  triggers: 0, lastAt: null,
+  _lastTriggerAt: -1e9, onTrigger: null,
+  press(atMs) {
+    if ((atMs - this._lastTriggerAt) <= CFG.triggerCooldownMs) return; // debounced
+    this._lastTriggerAt = atMs; this.lastAt = atMs; this.triggers++;
+    if (this.onTrigger) this.onTrigger();
+  }
+};
+
+const V = { w: 960, h: 580 };
+const GROUND_Y = V.h - 90, CHAR_X = V.w * 0.24, OBST_W = 46, JUMP_V = 620, GRAVITY = 2200;
+
+const runout = {
+  state: "idle", // idle | running | fail
+  obstacles: [], charY: 0, charVy: 0, shake: 0,
+  survivedMs: 0, speed: 260, spawnAcc: 0, spawnGap: 620,
+  best: Number(localStorage.getItem("escape.runoutBestMs") || 0) || null,
+  chatter: false,
+
+  // ---- cute-juice state: squash/stretch, dust puffs, blinking ----
+  squashX: 1, squashY: 1,          // current body scale; eases back to 1 each frame
+  wasAirborne: false,               // edge-detects landing, for the dust puff + squash
+  dust: [],                          // {x,y,vx,vy,life,maxLife}
+  blinkAt: 1.4,                      // seconds until next blink
+  blinkT: 0,                         // 0 = eyes open, ramps to 1 = fully closed and back
+
+  start() {
+    this.state = "running"; this.obstacles = []; this.charY = 0; this.charVy = 0;
+    this.survivedMs = 0; this.speed = 260; this.spawnAcc = 0; this.spawnGap = 620;
+    this.squashX = 1; this.squashY = 1; this.wasAirborne = false; this.dust = [];
+    log("in", "run started");
+  },
+
+  jump() {
+    if (this.state !== "running") { if (this.state === "fail") this.start(); return; }
+    if (this.charY >= -2) { this.charVy = -JUMP_V; this.squashX = 0.72; this.squashY = 1.32; }
+  },
+
+  spawnDust(n) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * (0.15 + Math.random() * 0.7); // upward-ish spread
+      const speed = 60 + Math.random() * 90;
+      this.dust.push({
+        x: CHAR_X + (Math.random() - 0.5) * 14, y: GROUND_Y - 2,
+        vx: -Math.cos(a) * speed * 0.5, vy: -Math.sin(a) * speed * 0.6,
+        life: 0, maxLife: 0.32 + Math.random() * 0.16,
+      });
+    }
+  },
+
+  update(dt) {
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3.4);
+
+    // squash/stretch always eases back toward 1, even when not running, so a
+    // fail-frame or menu-frame doesn't leave the body frozen mid-squish
+    this.squashX = lerp(this.squashX, 1, Math.min(1, dt * 12));
+    this.squashY = lerp(this.squashY, 1, Math.min(1, dt * 12));
+
+    for (const d of this.dust) { d.life += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 260 * dt; }
+    this.dust = this.dust.filter(d => d.life < d.maxLife);
+
+    if (this.state !== "running") {
+      this.blinkT = 0;
+      return;
+    }
+
+    // blink timer runs whenever a run is live
+    this.blinkAt -= dt;
+    if (this.blinkAt <= 0 && this.blinkT === 0) { this.blinkT = 0.0001; }
+    if (this.blinkT > 0) {
+      this.blinkT += dt * 9;
+      if (this.blinkT >= 1) { this.blinkT = 0; this.blinkAt = 2 + Math.random() * 2.5; }
+    }
+
+    this.survivedMs += dt * 1000;
+    this.speed += dt * 6;
+
+    this.charY += this.charVy * dt;
+    this.charVy += GRAVITY * dt;
+    if (this.charY > 0) { this.charY = 0; this.charVy = 0; }
+    const airborne = this.charY < -14;
+
+    if (this.wasAirborne && !airborne) {
+      // just landed — squash flat and kick up a little dust
+      this.squashX = 1.3; this.squashY = 0.68;
+      this.spawnDust(6);
+    }
+    this.wasAirborne = airborne;
+
+    this.spawnAcc += this.speed * dt;
+    if (this.spawnAcc >= this.spawnGap) {
+      this.spawnAcc = 0;
+      this.spawnGap = Math.max(360, 620 - this.survivedMs / 200);
+      this.obstacles.push({ type: Math.random() < 0.5 ? "HURDLE" : "BEAM", x: V.w + 60, resolved: false });
+    }
+
+    const dx = this.speed * dt;
+    for (const o of this.obstacles) {
+      o.x -= dx;
+      if (o.resolved) continue;
+      const charLeft = CHAR_X - 17, charRight = CHAR_X + 17;
+      const oLeft = o.x - OBST_W / 2, oRight = o.x + OBST_W / 2;
+      if (oRight > charLeft && oLeft < charRight) {
+        const bad = (o.type === "HURDLE" && !airborne) || (o.type === "BEAM" && airborne);
+        if (bad) { this.fail(); return; }
+      }
+      if (oRight < charLeft) o.resolved = true;
+    }
+    this.obstacles = this.obstacles.filter(o => o.x > -80);
+  },
+
+  fail() {
+    this.state = "fail"; this.shake = 1;
+    this.squashX = 1.22; this.squashY = 0.8; // a little "oof" squish on impact
+    const ms = Math.round(this.survivedMs);
+    if (this.best == null || ms > this.best) { this.best = ms; localStorage.setItem("escape.runoutBestMs", ms); }
+    log("err", `hit an obstacle — survived ${(ms/1000).toFixed(1)}s`);
+    showRunoutOverlay("fail");
+  }
+};
+
+function updateRunoutHud() {
+  $("vState").textContent = jumpBus.lastAt == null ? "—" : ((nowMs() - jumpBus.lastAt) / 1000).toFixed(1) + "s ago";
+  $("vTriggers").textContent = jumpBus.triggers;
+  $("vSurvived").textContent = (runout.survivedMs / 1000).toFixed(1) + "s";
+  $("vRunSpeed").textContent = Math.round(runout.speed);
+  $("statHead1").textContent = (runout.survivedMs / 1000).toFixed(1) + "s";
+  $("statHead2").textContent = runout.best != null ? (runout.best / 1000).toFixed(1) + "s" : "—";
+  $("vGameState").textContent = runout.state.toUpperCase();
+  $("vRuns").textContent = runs;
+}
+
+const runoutOv = $("runoutOverlay");
+function hideRunoutOverlay() { runoutOv.classList.add("hidden"); }
+function showRunoutOverlay(kind) {
+  runoutOv.classList.remove("hidden");
+  if (kind === "fail") {
+    const s = (runout.survivedMs / 1000).toFixed(1);
+    const best = runout.best != null ? (runout.best / 1000).toFixed(1) + "s" : s + "s";
+    runoutOv.innerHTML = `<h2>HIT</h2><p style="font-family:var(--mono);font-size:22px;color:var(--fg)">${s}s</p>
+      <p>Best ${best}.</p>
+      <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">run again</span></div>`;
+  } else {
+    runoutOv.innerHTML = `<h2>UNLOCKED</h2><p>Three rounds cracked. Now get out — jump the hurdles, stay grounded under the beams.</p>
+      <div class="kbd-row"><kbd>SPACE</kbd><span class="label" style="align-self:center">jump / run</span></div>`;
+  }
+}
+
+function handleRunoutTrigger() {
+  if (runout.state === "idle" || (runout.state === "fail" && !runoutOv.classList.contains("hidden"))) {
+    hideRunoutOverlay();
+    if (runout.state !== "running") runout.start();
+    return;
+  }
+  runout.jump();
+}
+jumpBus.onTrigger = () => { if (appPhase === "runout") handleRunoutTrigger(); };
+
+/* ============================================================
+   RUNOUT RENDER
+   ============================================================ */
+const cv = $("game");
+const ctx = cv.getContext("2d");
+function fitCanvas() {
+  const r = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.max(1, Math.round(r.width * dpr));
+  cv.height = Math.max(1, Math.round(r.height * dpr));
+}
+window.addEventListener("resize", () => { if (appPhase === "runout") fitCanvas(); });
+
+function drawRunout() {
+  const w = cv.width, h = cv.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const s = Math.min(w / V.w, h / V.h);
+  const ox = (w - V.w * s) / 2, oy = (h - V.h * s) / 2;
+  let shakeX = 0, shakeY = 0;
+  if (runout.shake > 0) { shakeX = (Math.random()-0.5)*16*runout.shake*s; shakeY = (Math.random()-0.5)*16*runout.shake*s; }
+  ctx.setTransform(s, 0, 0, s, ox + shakeX, oy + shakeY);
+
+  ctx.fillStyle = "#0C0C0E"; ctx.fillRect(0, 0, V.w, V.h);
+  ctx.strokeStyle = "#141417"; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 0; x < V.w; x += 48) { ctx.moveTo(x, 0); ctx.lineTo(x, V.h); }
+  for (let y = 0; y < V.h; y += 48) { ctx.moveTo(0, y); ctx.lineTo(V.w, y); }
+  ctx.stroke();
+  ctx.strokeStyle = "#2A2A2D"; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(0, GROUND_Y); ctx.lineTo(V.w, GROUND_Y); ctx.stroke();
+
+  for (const o of runout.obstacles) {
+    if (o.x < -60 || o.x > V.w + 60) continue;
+    const col = o.resolved ? "#3A3A3E" : "#CCFF00";
+    const eyeCol = o.resolved ? "#232325" : "#0A0A0B";
+    if (o.type === "HURDLE") {
+      // a friendly little rounded pillar, flush to the ground
+      const hh = 60, hw = OBST_W;
+      roundRectPath(o.x - hw/2, GROUND_Y - hh, hw, hh, [hw*0.4, hw*0.4, 0, 0]);
+      ctx.fillStyle = col; ctx.fill();
+      ctx.fillStyle = eyeCol;
+      ctx.beginPath(); ctx.arc(o.x - 8, GROUND_Y - hh + 18, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x + 8, GROUND_Y - hh + 18, 3, 0, Math.PI*2); ctx.fill();
+    } else {
+      // a friendly little awning hanging from the ceiling
+      const bh = 54, bw = OBST_W + 12, topY = GROUND_Y - 130;
+      roundRectPath(o.x - bw/2, topY, bw, bh, [0, 0, bw*0.4, bw*0.4]);
+      ctx.fillStyle = col; ctx.fill();
+      ctx.fillStyle = eyeCol;
+      ctx.beginPath(); ctx.arc(o.x - 8, topY + bh - 16, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x + 8, topY + bh - 16, 3, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // landing dust — small fading puffs, flat, no gradient
+  for (const d of runout.dust) {
+    const t = d.life / d.maxLife;
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.fillStyle = "#6E6E72";
+    ctx.beginPath(); ctx.arc(d.x, d.y, 3 * (1 - t * 0.4), 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  drawCharacter();
+}
+
+/** Rounded-rect path with per-corner radii [tl, tr, br, bl], native roundRect
+ *  when available, manual arcs otherwise (older browsers / consistency). */
+function roundRectPath(x, y, w, h, r) {
+  const [tl, tr, br, bl] = Array.isArray(r) ? r : [r, r, r, r];
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  ctx.arcTo(x + w, y, x + w, y + tr, tr);
+  ctx.lineTo(x + w, y + h - br);
+  ctx.arcTo(x + w, y + h, x + w - br, y + h, br);
+  ctx.lineTo(x + bl, y + h);
+  ctx.arcTo(x, y + h, x, y + h - bl, bl);
+  ctx.lineTo(x, y + tl);
+  ctx.arcTo(x, y, x + tl, y, tl);
+  ctx.closePath();
+}
+
+function drawCharacter() {
+  const airborne = runout.charY < -14;
+  const failed = runout.state === "fail";
+  const running = runout.state === "running";
+
+  // a small idle bob while grounded and running, purely cosmetic
+  const bob = (running && !airborne) ? Math.sin(runout.survivedMs / 90) * 2.2 : 0;
+  const cx = CHAR_X, cy = GROUND_Y + runout.charY + bob;
+  const bw = 34, bh = 44;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(runout.squashX, runout.squashY);
+
+  // body
+  roundRectPath(-bw/2, -bh, bw, bh, [bw*0.42, bw*0.42, bw*0.3, bw*0.3]);
+  ctx.fillStyle = failed ? "#F4F4F2" : "#CCFF00";
+  ctx.fill();
+
+  // face sits in the upper half of the body
+  const faceY = -bh * 0.62;
+  const eyeDX = 7.7, eyeCol = "#0A0A0B";
+  ctx.fillStyle = eyeCol; ctx.strokeStyle = eyeCol; ctx.lineWidth = 2.2;
+
+  if (failed) {
+    // dizzy little x_x eyes
+    for (const dir of [-1, 1]) {
+      const ex = dir * eyeDX;
+      ctx.beginPath(); ctx.moveTo(ex - 3.4, faceY - 3.4); ctx.lineTo(ex + 3.4, faceY + 3.4);
+      ctx.moveTo(ex + 3.4, faceY - 3.4); ctx.lineTo(ex - 3.4, faceY + 3.4); ctx.stroke();
+    }
+    // small wavy dizzy mouth
+    ctx.beginPath(); ctx.moveTo(-7, faceY + 13); ctx.quadraticCurveTo(-2.8, faceY + 17, 0, faceY + 13);
+    ctx.quadraticCurveTo(2.8, faceY + 9, 7, faceY + 13); ctx.stroke();
+  } else {
+    const blinkSquash = runout.blinkT > 0 ? Math.max(0.08, 1 - Math.sin(runout.blinkT * Math.PI)) : 1;
+    for (const dir of [-1, 1]) {
+      const ex = dir * eyeDX + (airborne ? dir * 0.6 : 0);
+      ctx.save();
+      ctx.translate(ex, faceY);
+      ctx.scale(1, blinkSquash);
+      ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    // mouth — a small "o" mid-air, a soft smile on the ground
+    if (airborne) {
+      ctx.beginPath(); ctx.arc(0, faceY + 11, 3.3, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(0, faceY + 7, 5.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+/* ============================================================
+   INPUT SOURCES — matrix keyboard, sensor keyboard, and shared serial
+   ============================================================ */
+class KeyboardMatrixSource {
+  constructor() {
+    this._down = (e) => {
+      const k = e.key.toLowerCase();
+      if (k === " ") { e.preventDefault(); if (recall.state === "menu" || recall.state === "gameover") { hideRecallOverlay(); recall.start(); } else if (recall.state === "cleared") { advanceToRunout(); } return; }
+      if (k in KEY_TO_IDX) { e.preventDefault(); const idx = KEY_TO_IDX[k]; handleMatrixPress(idx); if (chatterOn) fireChatter(idx); }
+    };
+  }
+  start() { window.addEventListener("keydown", this._down); }
+  stop() { window.removeEventListener("keydown", this._down); }
+  get connected() { return true; }
+}
+
+class KeyboardSensorSource {
+  constructor() {
+    this.held = false; // ignore OS key-repeat while SPACE stays down — one physical press, one click
+    this._down = (e) => {
+      if (e.key.toLowerCase() !== " ") return;
+      e.preventDefault();
+      if (this.held) return;
+      this.held = true;
+      jumpBus.press(nowMs());
+      if (runout.chatter) fireJoystickChatter();
+    };
+    this._up = (e) => { if (e.key.toLowerCase() === " ") this.held = false; };
+  }
+  start() { window.addEventListener("keydown", this._down); window.addEventListener("keyup", this._up); }
+  stop() { window.removeEventListener("keydown", this._down); window.removeEventListener("keyup", this._up); }
+  get connected() { return true; }
+}
+
+function fireJoystickChatter() {
+  const n = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < n; i++) setTimeout(() => jumpBus.press(nowMs()), 8 + i * 14);
+}
+
+class SerialSource {
+  constructor() { this.port = null; this.reader = null; this.writer = null; this.buf = ""; this._connected = false; }
+  get connected() { return this._connected; }
+  static get supported() { return "serial" in navigator; }
+  async connect() {
+    if (!SerialSource.supported) throw new Error("Web Serial not available in this browser");
+    this.port = await navigator.serial.requestPort();
+    await this.port.open({ baudRate: CFG.baudRate });
+    const enc = new TextEncoderStream(); enc.readable.pipeTo(this.port.writable).catch(()=>{});
+    this.writer = enc.writable.getWriter();
+    this._connected = true; log("in", `connected @ ${CFG.baudRate} baud`);
+    this._read();
+  }
+  async _read() {
+    const dec = new TextDecoderStream(); this.port.readable.pipeTo(dec.writable).catch(()=>{});
+    this.reader = dec.readable.getReader();
+    try {
+      while (true) {
+        const { value, done } = await this.reader.read();
+        if (done) break;
+        this.buf += value;
+        let i;
+        while ((i = this.buf.indexOf("\n")) >= 0) {
+          const line = this.buf.slice(0, i).trim(); this.buf = this.buf.slice(i + 1);
+          if (line) this._line(line);
+        }
+      }
+    } catch (err) { log("err", "read error: " + err.message); }
+    finally { this._connected = false; }
+  }
+  _line(line) {
+    if (line.startsWith("K:")) { const idx = parseInt(line.slice(2), 10); if (Number.isFinite(idx) && idx >= 0 && idx < 16 && appPhase === "recall") handleMatrixPress(idx); return; }
+    if (line.startsWith("J:")) { jumpBus.press(nowMs()); return; }
+    log("in", "< " + line);
+  }
+  async send(cmd) { if (!this.writer) return; try { await this.writer.write(cmd + "\n"); } catch (err) { log("err", "write failed: " + err.message); } }
+  async disconnect() {
+    this._connected = false;
+    try { if (this.reader) await this.reader.cancel(); } catch (e) {}
+    try { if (this.writer) await this.writer.close(); } catch (e) {}
+    try { if (this.port) await this.port.close(); } catch (e) {}
+    this.port = this.reader = this.writer = null; log("err", "disconnected");
+  }
+}
+
+const keyboardMatrix = new KeyboardMatrixSource();
+const keyboardSensor = new KeyboardSensorSource();
+const serialSrc = new SerialSource();
+let source = keyboardMatrix;
+
+function setSource(next) {
+  if (source === next) return;
+  source.stop && source.stop();
+  source = next;
+  source.start && source.start();
+}
+
+$("srcKeyboard").onclick = () => setSource(keyboardMatrix);
+$("srcSerial").onclick = async () => { if (!serialSrc.connected) { await doConnect(); return; } setSource(serialSrc); };
+
+async function doConnect() {
+  if (!SerialSource.supported) {
+    log("err", "Web Serial unavailable — use Chrome or Edge");
+    alert("Web Serial isn't available in this browser.\n\nUse Chrome or Edge. Keyboard mode works everywhere.");
+    return;
+  }
+  try {
+    await serialSrc.connect(); setSource(serialSrc);
+    $("srcDot").className = "dot live"; $("connectBtn").textContent = "DISCONNECT";
+    $("srcKeyboard").classList.remove("on"); $("srcSerial").classList.add("on");
+  } catch (err) {
+    if (err && err.name === "NotFoundError") log("err", "no port selected");
+    else log("err", "connect failed: " + (err && err.message ? err.message : err));
+  }
+}
+$("connectBtn").onclick = async () => {
+  if (serialSrc.connected) {
+    await serialSrc.disconnect();
+    setSource(appPhase === "recall" ? keyboardMatrix : keyboardSensor);
+    $("srcDot").className = "dot idle"; $("connectBtn").textContent = "CONNECT ARDUINO";
+    $("srcSerial").classList.remove("on"); $("srcKeyboard").classList.add("on");
+  } else { await doConnect(); }
+};
+
+$("chatterOff").onclick = () => setChatter(false);
+$("chatterOn").onclick = () => setChatter(true);
+function setChatter(on) { chatterOn = on; $("chatterOff").classList.toggle("on", !on); $("chatterOn").classList.toggle("on", on); log("in", "chatter simulation " + (on ? "ON" : "OFF")); }
+
+$("noiseOff").onclick = () => setJoyChatter(false);
+$("noiseOn").onclick = () => setJoyChatter(true);
+function setJoyChatter(on) { runout.chatter = on; $("noiseOff").classList.toggle("on", !on); $("noiseOn").classList.toggle("on", on); log("in", "joystick chatter simulation " + (on ? "ON" : "OFF")); }
+
+window.addEventListener("keydown", (e) => {
+  if (appPhase !== "runout") return;
+  // SPACE itself is handled by KeyboardSensorSource (it owns debounce + the
+  // OS-key-repeat guard) — a second handler here would double-fire every press.
+  if (e.key.toLowerCase() === "n") setJoyChatter(!runout.chatter);
+});
+
+/* ============================================================
+   MAIN LOOP — only the runout phase needs continuous stepping;
+   recall is event/timer driven.
+   ============================================================ */
+let last = nowMs();
+function frame() {
+  const t = nowMs();
+  let dt = (t - last) / 1000; last = t; dt = Math.min(dt, 0.05);
+
+  if (appPhase === "runout") {
+    runout.update(dt);
+    drawRunout();
+    updateRunoutHud();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+setPhaseChrome("recall");
+updateRecallHud();
+showRecallOverlay("menu");
+keyboardMatrix.start();
+log("in", "keyboard test mode ready");
+if (!SerialSource.supported) log("err", "Web Serial unavailable in this browser");
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
