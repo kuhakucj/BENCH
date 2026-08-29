@@ -1,0 +1,675 @@
+{
+  "hardware": {
+    "role": "hardware",
+    "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+    "catalogVersion": "2026-08-29-mvp",
+    "componentIds": [
+      "esp32-devkit-v1",
+      "arduino-uno-r3",
+      "arduino-nano",
+      "raspberry-pi-pico",
+      "ldr-photoresistor",
+      "resistor",
+      "voltage-divider",
+      "breadboard",
+      "jumper-wires"
+    ],
+    "facts": [
+      {
+        "id": "esp32-logic-voltage",
+        "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+        "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-wireless",
+        "statement": "ESP32 includes 2.4 GHz Wi-Fi and Bluetooth capabilities.",
+        "beginnerExplanation": "The board can later communicate wirelessly without an extra radio module.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-gpio34",
+        "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+        "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "uno-capabilities",
+        "statement": "Arduino Uno R3 has 14 digital I/O pins, 6 PWM outputs, and 6 analog inputs.",
+        "beginnerExplanation": "The Uno is easy to learn and has enough analog inputs for a light sensor.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "arduino-uno-r3"
+        ],
+        "componentId": "arduino-uno-r3",
+        "componentName": "Arduino Uno R3",
+        "category": "microcontroller"
+      },
+      {
+        "id": "uno-logic-voltage",
+        "statement": "Arduino Uno R3 operates with 5 V logic.",
+        "beginnerExplanation": "Its pin voltage is different from the ESP32, so sensor wiring cannot always be copied between boards.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "arduino-uno-r3"
+        ],
+        "componentId": "arduino-uno-r3",
+        "componentName": "Arduino Uno R3",
+        "category": "microcontroller"
+      },
+      {
+        "id": "nano-logic-voltage",
+        "statement": "The classic Arduino Nano ATmega328 is a 5 V board with analog inputs and PWM-capable digital pins.",
+        "beginnerExplanation": "The Nano is compact but uses the same 5 V logic family as the classic Uno.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "arduino-nano-datasheet"
+        ],
+        "componentId": "arduino-nano",
+        "componentName": "Arduino Nano ATmega328",
+        "category": "microcontroller"
+      },
+      {
+        "id": "pico-capabilities",
+        "statement": "Raspberry Pi Pico provides 26 multifunction GPIO pins, including 3 exposed ADC inputs, plus PWM, I2C, SPI, and UART.",
+        "beginnerExplanation": "The Pico can read a light sensor and control many common parts, but the base Pico has no built-in wireless radio.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "raspberry-pi-pico"
+        ],
+        "componentId": "raspberry-pi-pico",
+        "componentName": "Raspberry Pi Pico",
+        "category": "microcontroller"
+      },
+      {
+        "id": "pico-logic-voltage",
+        "statement": "Raspberry Pi Pico GPIO uses 3.3 V logic.",
+        "beginnerExplanation": "Keep signals connected to Pico GPIO at 3.3 V.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "raspberry-pi-pico"
+        ],
+        "componentId": "raspberry-pi-pico",
+        "componentName": "Raspberry Pi Pico",
+        "category": "microcontroller"
+      },
+      {
+        "id": "ldr-divider",
+        "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+        "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      },
+      {
+        "id": "resistor-purpose",
+        "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+        "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "arduino-built-in-examples",
+          "adafruit-photocell"
+        ],
+        "componentId": "resistor",
+        "componentName": "Fixed resistor",
+        "category": "supporting"
+      },
+      {
+        "id": "divider-purpose",
+        "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+        "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "voltage-divider",
+        "componentName": "Voltage divider",
+        "category": "supporting"
+      }
+    ],
+    "sources": [
+      {
+        "id": "espressif-esp32-datasheet",
+        "title": "ESP32 Series Datasheet",
+        "publisher": "Espressif Systems",
+        "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+        "kind": "manufacturer-datasheet"
+      },
+      {
+        "id": "espressif-esp32-gpio",
+        "title": "ESP32 GPIO and RTC GPIO",
+        "publisher": "Espressif Systems",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "arduino-uno-r3",
+        "title": "Arduino UNO R3 Documentation",
+        "publisher": "Arduino",
+        "url": "https://docs.arduino.cc/hardware/uno-rev3",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "arduino-nano-datasheet",
+        "title": "Arduino Nano Datasheet",
+        "publisher": "Arduino",
+        "url": "https://docs.arduino.cc/resources/datasheets/A000005-datasheet.pdf",
+        "kind": "manufacturer-datasheet"
+      },
+      {
+        "id": "raspberry-pi-pico",
+        "title": "Pico-series Microcontrollers",
+        "publisher": "Raspberry Pi",
+        "url": "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "adafruit-photocell",
+        "title": "Photocells",
+        "publisher": "Adafruit Learning System",
+        "url": "https://learn.adafruit.com/photocells?view=all",
+        "kind": "trusted-beginner-reference"
+      },
+      {
+        "id": "arduino-built-in-examples",
+        "title": "Arduino Built-in Examples",
+        "publisher": "Arduino",
+        "url": "https://docs.arduino.cc/built-in-examples",
+        "kind": "manufacturer-documentation"
+      }
+    ]
+  },
+  "wiring": {
+    "role": "wiring",
+    "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+    "catalogVersion": "2026-08-29-mvp",
+    "componentIds": [
+      "esp32-devkit-v1",
+      "ldr-photoresistor",
+      "resistor",
+      "voltage-divider",
+      "breadboard",
+      "jumper-wires"
+    ],
+    "facts": [
+      {
+        "id": "esp32-logic-voltage",
+        "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+        "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-gpio34",
+        "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+        "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "ldr-divider",
+        "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+        "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      },
+      {
+        "id": "ldr-rail-selection",
+        "statement": "Power the divider from the board voltage that matches the analog input maximum.",
+        "beginnerExplanation": "For an ESP32, build the divider from 3.3 V, not 5 V.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell",
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      },
+      {
+        "id": "resistor-purpose",
+        "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+        "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "arduino-built-in-examples",
+          "adafruit-photocell"
+        ],
+        "componentId": "resistor",
+        "componentName": "Fixed resistor",
+        "category": "supporting"
+      },
+      {
+        "id": "divider-purpose",
+        "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+        "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "voltage-divider",
+        "componentName": "Voltage divider",
+        "category": "supporting"
+      },
+      {
+        "id": "breadboard-layout",
+        "statement": "Breadboard power rails and terminal strips must be connected according to the board's internal row layout.",
+        "beginnerExplanation": "Rows are connected internally, but the center gap and split power rails are not automatically joined.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "arduino-built-in-examples"
+        ],
+        "componentId": "breadboard",
+        "componentName": "Solderless breadboard",
+        "category": "supporting"
+      },
+      {
+        "id": "wire-colors",
+        "statement": "Consistent wire colors make beginner circuits easier to inspect: red for power, black for ground, and another color for signals.",
+        "beginnerExplanation": "Color coding helps you catch wiring mistakes before power-up.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "arduino-built-in-examples"
+        ],
+        "componentId": "jumper-wires",
+        "componentName": "Jumper wires",
+        "category": "supporting"
+      }
+    ],
+    "sources": [
+      {
+        "id": "espressif-esp32-datasheet",
+        "title": "ESP32 Series Datasheet",
+        "publisher": "Espressif Systems",
+        "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+        "kind": "manufacturer-datasheet"
+      },
+      {
+        "id": "espressif-esp32-gpio",
+        "title": "ESP32 GPIO and RTC GPIO",
+        "publisher": "Espressif Systems",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "adafruit-photocell",
+        "title": "Photocells",
+        "publisher": "Adafruit Learning System",
+        "url": "https://learn.adafruit.com/photocells?view=all",
+        "kind": "trusted-beginner-reference"
+      },
+      {
+        "id": "arduino-built-in-examples",
+        "title": "Arduino Built-in Examples",
+        "publisher": "Arduino",
+        "url": "https://docs.arduino.cc/built-in-examples",
+        "kind": "manufacturer-documentation"
+      }
+    ]
+  },
+  "firmware": {
+    "role": "firmware",
+    "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+    "catalogVersion": "2026-08-29-mvp",
+    "componentIds": [
+      "esp32-devkit-v1",
+      "ldr-photoresistor",
+      "resistor",
+      "voltage-divider",
+      "breadboard",
+      "jumper-wires"
+    ],
+    "facts": [
+      {
+        "id": "esp32-gpio34",
+        "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+        "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-platformio-target",
+        "statement": "The generic ESP32 development-board PlatformIO environment uses board ID esp32dev.",
+        "beginnerExplanation": "Bench compiles this board as esp32dev in PlatformIO.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "platformio-esp32dev"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "ldr-divider",
+        "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+        "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      }
+    ],
+    "sources": [
+      {
+        "id": "espressif-esp32-datasheet",
+        "title": "ESP32 Series Datasheet",
+        "publisher": "Espressif Systems",
+        "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+        "kind": "manufacturer-datasheet"
+      },
+      {
+        "id": "espressif-esp32-gpio",
+        "title": "ESP32 GPIO and RTC GPIO",
+        "publisher": "Espressif Systems",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "platformio-esp32dev",
+        "title": "Espressif 32 Platform",
+        "publisher": "PlatformIO",
+        "url": "https://docs.platformio.org/en/latest/platforms/espressif32.html",
+        "kind": "toolchain-documentation"
+      },
+      {
+        "id": "adafruit-photocell",
+        "title": "Photocells",
+        "publisher": "Adafruit Learning System",
+        "url": "https://learn.adafruit.com/photocells?view=all",
+        "kind": "trusted-beginner-reference"
+      }
+    ]
+  },
+  "supervisor": {
+    "role": "supervisor",
+    "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+    "catalogVersion": "2026-08-29-mvp",
+    "componentIds": [
+      "esp32-devkit-v1",
+      "ldr-photoresistor",
+      "resistor",
+      "voltage-divider",
+      "breadboard",
+      "jumper-wires"
+    ],
+    "facts": [
+      {
+        "id": "esp32-logic-voltage",
+        "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+        "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-gpio34",
+        "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+        "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "esp32-platformio-target",
+        "statement": "The generic ESP32 development-board PlatformIO environment uses board ID esp32dev.",
+        "beginnerExplanation": "Bench compiles this board as esp32dev in PlatformIO.",
+        "safetyCritical": false,
+        "sourceIds": [
+          "platformio-esp32dev"
+        ],
+        "componentId": "esp32-devkit-v1",
+        "componentName": "ESP32 DevKit v1",
+        "category": "microcontroller"
+      },
+      {
+        "id": "ldr-divider",
+        "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+        "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      },
+      {
+        "id": "ldr-rail-selection",
+        "statement": "Power the divider from the board voltage that matches the analog input maximum.",
+        "beginnerExplanation": "For an ESP32, build the divider from 3.3 V, not 5 V.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell",
+          "espressif-esp32-datasheet"
+        ],
+        "componentId": "ldr-photoresistor",
+        "componentName": "LDR photoresistor",
+        "category": "sensor"
+      },
+      {
+        "id": "resistor-purpose",
+        "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+        "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "arduino-built-in-examples",
+          "adafruit-photocell"
+        ],
+        "componentId": "resistor",
+        "componentName": "Fixed resistor",
+        "category": "supporting"
+      },
+      {
+        "id": "divider-purpose",
+        "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+        "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+        "safetyCritical": true,
+        "sourceIds": [
+          "adafruit-photocell"
+        ],
+        "componentId": "voltage-divider",
+        "componentName": "Voltage divider",
+        "category": "supporting"
+      }
+    ],
+    "sources": [
+      {
+        "id": "espressif-esp32-datasheet",
+        "title": "ESP32 Series Datasheet",
+        "publisher": "Espressif Systems",
+        "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+        "kind": "manufacturer-datasheet"
+      },
+      {
+        "id": "espressif-esp32-gpio",
+        "title": "ESP32 GPIO and RTC GPIO",
+        "publisher": "Espressif Systems",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+        "kind": "manufacturer-documentation"
+      },
+      {
+        "id": "platformio-esp32dev",
+        "title": "Espressif 32 Platform",
+        "publisher": "PlatformIO",
+        "url": "https://docs.platformio.org/en/latest/platforms/espressif32.html",
+        "kind": "toolchain-documentation"
+      },
+      {
+        "id": "adafruit-photocell",
+        "title": "Photocells",
+        "publisher": "Adafruit Learning System",
+        "url": "https://learn.adafruit.com/photocells?view=all",
+        "kind": "trusted-beginner-reference"
+      },
+      {
+        "id": "arduino-built-in-examples",
+        "title": "Arduino Built-in Examples",
+        "publisher": "Arduino",
+        "url": "https://docs.arduino.cc/built-in-examples",
+        "kind": "manufacturer-documentation"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "mcu-selection",
+      "title": "Why ESP32 DevKit v1?",
+      "summary": "Bench compared supported boards using verified capabilities before asking the model to recommend one.",
+      "reasons": [
+        "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+        "The board can later communicate wirelessly without an extra radio module.",
+        "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor."
+      ],
+      "sourceIds": [
+        "espressif-esp32-datasheet",
+        "espressif-esp32-gpio"
+      ]
+    },
+    {
+      "id": "circuit-safety",
+      "title": "Why this wiring?",
+      "summary": "Safety-critical wiring choices are checked against the component catalog.",
+      "reasons": [
+        "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+        "For an ESP32, build the divider from 3.3 V, not 5 V.",
+        "The resistor value and its exact position are part of the circuit, not optional decoration.",
+        "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage."
+      ],
+      "sourceIds": [
+        "adafruit-photocell",
+        "espressif-esp32-datasheet",
+        "arduino-built-in-examples"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "grounding-present",
+      "status": "pass",
+      "message": "7 relevant facts from 5 trusted sources were available to the supervisor.",
+      "beginnerExplanation": "Bench checked this project against retrieved documentation instead of relying only on model memory.",
+      "factIds": [],
+      "sourceIds": []
+    },
+    {
+      "id": "known-board",
+      "status": "pass",
+      "message": "ESP32 DevKit v1 matched knowledge component esp32-devkit-v1.",
+      "beginnerExplanation": "The selected board has reviewed voltage, pin, and toolchain data.",
+      "factIds": [],
+      "sourceIds": []
+    },
+    {
+      "id": "logic-voltage",
+      "status": "pass",
+      "message": "Circuit logic voltage 3.3V matches the verified 3.3 V board value.",
+      "beginnerExplanation": "The signal voltage matches the board.",
+      "factIds": [
+        "esp32-logic-voltage"
+      ],
+      "sourceIds": [
+        "espressif-esp32-datasheet"
+      ]
+    },
+    {
+      "id": "platformio-target",
+      "status": "pass",
+      "message": "Circuit and firmware use verified PlatformIO target esp32dev.",
+      "beginnerExplanation": "The compiler is configured for the selected board.",
+      "factIds": [],
+      "sourceIds": []
+    },
+    {
+      "id": "pin-gpio34",
+      "status": "pass",
+      "message": "GPIO34 is a verified usable pin on ESP32 DevKit v1.",
+      "beginnerExplanation": "Bench verified this pin assignment against the board record.",
+      "factIds": [],
+      "sourceIds": []
+    },
+    {
+      "id": "adc-gpio34",
+      "status": "pass",
+      "message": "GPIO34 is verified for ADC input.",
+      "beginnerExplanation": "This pin can measure the sensor voltage.",
+      "factIds": [
+        "esp32-gpio34"
+      ],
+      "sourceIds": [
+        "espressif-esp32-datasheet",
+        "espressif-esp32-gpio"
+      ]
+    },
+    {
+      "id": "ldr-divider",
+      "status": "pass",
+      "message": "The LDR uses a documented 10k voltage divider tied to board-safe power and ground.",
+      "beginnerExplanation": "The sensor can now produce a safe changing voltage.",
+      "factIds": [
+        "ldr-divider",
+        "ldr-rail-selection"
+      ],
+      "sourceIds": [
+        "adafruit-photocell",
+        "espressif-esp32-datasheet"
+      ]
+    }
+  ]
+}

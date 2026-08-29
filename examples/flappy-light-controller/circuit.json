@@ -1,0 +1,70 @@
+{
+  "board": {
+    "id": "esp32-devkit-v1",
+    "name": "ESP32 DevKit v1",
+    "logicVoltage": "3.3V",
+    "platformioEnv": "esp32dev"
+  },
+  "components": [
+    {
+      "id": "ldr1",
+      "type": "LDR",
+      "label": "Light sensor"
+    },
+    {
+      "id": "r1",
+      "type": "resistor",
+      "label": "Pulldown resistor",
+      "value": "10k ohm"
+    },
+    {
+      "id": "breadboard1",
+      "type": "breadboard",
+      "label": "Breadboard"
+    }
+  ],
+  "connections": [
+    {
+      "from": "ESP32 3V3",
+      "to": "LDR leg A",
+      "signal": "3.3V",
+      "wireColor": "red"
+    },
+    {
+      "from": "LDR leg B",
+      "to": "GPIO34 / ADC",
+      "signal": "sensor voltage",
+      "wireColor": "yellow",
+      "note": "This junction is the analog reading point."
+    },
+    {
+      "from": "GPIO34 / ADC",
+      "to": "10k resistor leg A",
+      "signal": "voltage divider midpoint",
+      "wireColor": "yellow"
+    },
+    {
+      "from": "10k resistor leg B",
+      "to": "ESP32 GND",
+      "signal": "ground",
+      "wireColor": "black"
+    }
+  ],
+  "pins": [
+    {
+      "component": "Light sensor divider",
+      "pin": "midpoint",
+      "boardPin": "GPIO34",
+      "mode": "analog input",
+      "firmwareSymbol": "LIGHT_SENSOR_PIN"
+    }
+  ],
+  "protocols": [
+    "ADC",
+    "USB Serial"
+  ],
+  "warnings": [
+    "Do not connect the divider to 5V on ESP32.",
+    "GPIO34 cannot drive outputs; use it only as an input."
+  ]
+}

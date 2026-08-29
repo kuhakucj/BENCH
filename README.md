@@ -1,186 +1,180 @@
-# BENCH Physical Computing Agent
+# BENCH
 
-One-day hackathon MVP for a beginner-focused AI platform that takes a physical-computing idea from natural language to a verified build plan:
+BENCH is an AI hardware engineering team that helps beginners turn physical-computing ideas into verified builds.
 
-`IDEA -> visible multi-agent activity -> BUILD PLAN -> VERIFICATION -> READY TO BUILD`
+Describe what you want to make, and specialist Hardware Architect, Wiring Engineer, Firmware Engineer, and Supervisor agents collaborate through a canonical shared project specification. They guide the project from component selection and exact wiring through firmware generation, compilation, repair, and beginner-friendly physical assembly.
 
-The existing static `.dc.html` design files are preserved as visual references. The working MVP is now a Next.js app.
+Nosana powers the open-source AI reasoning behind the specialists. Daytona gives BENCH isolated workspaces where generated firmware is written, compiled, debugged, repaired, and recompiled before a project can be marked verified.
 
-## Grounded Electronics Knowledge
-
-BENCH does not ask the model to recall electrical specifications from memory. A reviewed MVP catalog in `knowledge/electronics.json` contains structured board voltage, PlatformIO target, verified pin, ADC/PWM, divider, power, and driver facts with source metadata. It covers the supported beginner set: ESP32, Uno, Nano, Pico, LDR, ultrasonic, button, potentiometer, TMP36, PIR, LED, buzzer, SG90, DC motor, and common supporting parts.
-
-`lib/knowledge/retrieval.ts` selects only the facts needed by each specialist. `lib/knowledge/validation.ts` then checks safety-critical values deterministically. Failed voltage, pin, ADC, target, divider, LED-resistor, ultrasonic-level, or motor-driver checks block `READY TO BUILD`, regardless of what the LLM says.
-
-```text
-USER IDEA
-  -> role-specific knowledge retrieval
-  -> Nosana specialist reasons over retrieved facts
-  -> canonical project_spec.json
-  -> Daytona compile and repair
-  -> deterministic knowledge checks + Supervisor
-  -> READY TO BUILD
-```
-
-The UI keeps this beginner-friendly: important choices expose collapsed `Why this?` explanations and direct source links, while detailed knowledge checks stay inspectable in the activity rail.
+`IDEA -> HARDWARE -> WIRING -> CODE -> VERIFY -> BUILD`
 
 ## Sponsor Infrastructure
 
-### Nosana - AI Compute
+### Nosana - AI reasoning
 
-Nosana hosts the open-source LLM that powers the specialist hardware engineering agents. The same Qwen3 8B-compatible endpoint is used with different system prompts for:
+Nosana provides the open-source LLM inference powering BENCH's specialist engineering agents. Hardware Architect, Wiring Engineer, Firmware Engineer, and Supervisor all call the shared inference layer with different role instructions, strict structured schemas, retrieved electronics knowledge, and the current project context.
 
-- `lib/agents/hardwareAgent.ts`
-- `lib/agents/wiringAgent.ts`
-- `lib/agents/firmwareAgent.ts`
-- `lib/agents/supervisorAgent.ts`
+The normal application path uses `lib/nosana/client.ts`. The swappable provider configuration is in `lib/nosana/config.ts`. Qwen3 8B deployment infrastructure is committed in `nosana/qwen3-vllm.job.json` and managed through the official `@nosana/kit` SDK in `scripts/nosana.mjs`.
 
-The model layer is swappable through `lib/nosana/client.ts` and `lib/nosana/config.ts`. Nosana deployment infrastructure is committed as `nosana/qwen3-vllm.job.json` and managed by `scripts/nosana.mjs` through the official `@nosana/kit` SDK. It deploys Qwen3 8B behind vLLM's OpenAI-compatible API, checks `/v1/models`, and writes the resulting inference URL to the local server environment.
+### Daytona - execution and verification
 
-The Nosana account key is used only by the server-side deployment controls. It is deliberately separate from the optional inference bearer token and is never sent to the model endpoint. Without a live endpoint, the app uses deterministic demo fallback data and clearly labels the provider as `mock`.
+Daytona provides isolated development environments where generated firmware becomes a real embedded project. BENCH creates a sandbox through `@daytona/sdk`, writes the PlatformIO files, installs toolchains when required, compiles the firmware, captures compiler output, sends failures back to the Firmware Engineer, and recompiles repaired code.
 
-### Daytona - Agent Computers
-
-Daytona gives the AI engineering workflow an isolated execution environment where firmware can be created, compiled, observed, repaired, and recompiled.
-
-The Daytona path lives in:
-
-- `lib/daytona/client.ts`
-- `lib/daytona/firmwareProject.ts`
-- `lib/daytona/arduinoFallback.ts`
-- `lib/daytona/compileLoop.ts`
-
-The firmware verification loop is:
+BENCH only marks firmware as verified after a successful real compile and Supervisor consistency check.
 
 ```text
-USER IDEA
+User idea
   |
   v
-NOSANA Qwen3 8B on vLLM
+Electronics knowledge / retrieval
   |
   v
-Hardware Agent -> Wiring Agent -> Firmware Agent
+Nosana open-source LLM inference
   |
   v
-DAYTONA SANDBOX
+Hardware Architect -> Wiring Engineer -> Firmware Engineer
   |
   v
-Create -> Write files -> Compile with PlatformIO
-                         |
-                         +-> If its registry is unavailable, compile with the
-                             pinned GitHub-hosted Arduino/ESP32 toolchain
-                         |
-                         v
-                    Observe errors
+Canonical project_spec.json
   |
   v
-Firmware Agent repairs code when needed
+Daytona sandbox
   |
   v
-DAYTONA recompiles
+Create project -> write files -> install dependencies -> compile
+  |                                                   |
+  |                                           compiler error
+  |                                                   |
+  |                         Nosana firmware repair <-+
+  |                                                   |
+  +------------------------------------------ Daytona recompile
   |
   v
-NOSANA Supervisor
+Supervisor + deterministic engineering checks
   |
   v
-VERIFIED BUILD
-  |
-  v
-HUMAN BUILDS PHYSICAL PROJECT
+Verified build
 ```
 
-If Daytona is removed, the app loses its real firmware compile and repair loop. It will not display `READY TO BUILD` unless the compile state is verified.
+**Remove Nosana and BENCH loses its engineering reasoning layer. Remove Daytona and BENCH loses its ability to prove that generated firmware builds.**
 
-If Nosana is removed, the app loses its specialist AI engineering team. The local fallback is only for demos and development without credentials.
+## Generated Is Not Verified
 
-## Canonical Project State
+`GENERATED != VERIFIED`
 
-Every run produces a canonical `project_spec.json` under `generated/<project-id>/` plus:
+Generated firmware becomes verified only when all three conditions hold:
 
-- `circuit.json`
-- `grounding.json` with role-specific evidence, sources, decisions, and deterministic checks
-- generated PlatformIO firmware files
-- verification logs and supervisor findings
+1. A real Daytona sandbox builds the generated project.
+2. The compile command returns exit code `0`.
+3. The Supervisor confirms hardware, wiring, voltage, GPIO, protocol, library, and firmware consistency.
 
-The shared spec includes project description, MCU selection, BOM, voltage notes, pin assignments, protocols, libraries, wiring, firmware target, build status, warnings, and verification results.
+Development fallbacks remain available for contributors without sponsor credentials, but they always preserve `verification.verified = false`. `ALLOW_MOCK_COMPILE=1` enables a clearly labeled dry run; it can never produce `READY_TO_BUILD`.
 
-## Demo Prompt
+**BENCH does not ask the AI whether its code should work. It gives the AI an execution environment and makes it prove it.**
+
+## Where The Integrations Live
+
+- `app/api/projects/route.ts` - production orchestrator: retrieval, all specialist calls, shared spec construction, Daytona compile loop, correction routing, Supervisor, and final phase
+- `lib/agents/hardwareAgent.ts` - grounded MCU comparison, BOM, power, communications, constraints, and difficulty
+- `lib/agents/wiringAgent.ts` - exact structured circuit, pins, rails, protocols, resistors, and voltage warnings
+- `lib/agents/firmwareAgent.ts` - PlatformIO/Arduino firmware generation and compiler-error repair
+- `lib/agents/supervisorAgent.ts` - model review plus deterministic consistency and safety gates
+- `lib/nosana/client.ts` - OpenAI-compatible Nosana inference call used by every specialist
+- `lib/nosana/config.ts` - swappable model provider configuration and explicit development fallback
+- `nosana/qwen3-vllm.job.json` - Nosana-hosted Qwen3 8B vLLM job definition
+- `scripts/nosana.mjs` - `@nosana/kit` deployment lifecycle, endpoint readiness, credits, and shutdown
+- `lib/daytona/client.ts` - `@daytona/sdk` sandbox creation, file upload, command execution, and cleanup
+- `lib/daytona/compileLoop.ts` - create -> write -> compile -> observe -> repair -> recompile loop
+- `lib/daytona/firmwareProject.ts` - generated project files and PlatformIO compile command
+- `lib/daytona/arduinoFallback.ts` - real in-sandbox Arduino CLI toolchain fallback when the PlatformIO registry is unavailable
+- `lib/knowledge/` - task-specific electronics retrieval, source metadata, and deterministic validation
+- `knowledge/electronics.json` - reviewed structured facts for supported beginner hardware
+- `lib/schemas/projectSpec.ts` - canonical project, hardware, circuit, firmware, grounding, and verification schemas
+- `examples/flappy-light-controller/` - captured, genuinely Daytona-verified demo output
+
+Legacy `.dc.html` files and `Project_Bench/` are visual prototypes. The production application path starts at `app/page.tsx` and `app/api/projects/route.ts`.
+
+## Shared Project State
+
+Agents do not produce disconnected chat answers. Every run builds one `ProjectSpec` containing:
+
+- idea and lifecycle phase
+- selected MCU, BOM, alternatives, power, communications, and constraints
+- exact `circuit.json` components, connections, pins, protocols, and warnings
+- generated firmware target, libraries, and files
+- retrieved facts, sources, decisions, and deterministic knowledge checks
+- Daytona compile provider, attempts, logs, and success state
+- Supervisor findings and beginner build instructions
+
+Runs are persisted under `generated/<project-id>/` as `project_spec.json`, `circuit.json`, `grounding.json`, and firmware files.
+
+## Grounded Electronics Knowledge
+
+BENCH does not rely solely on model memory for hardware facts. Each specialist retrieves only the relevant trusted context from a reviewed catalog, including:
+
+- manufacturer datasheets and board documentation
+- pinouts and GPIO capabilities
+- operating and logic voltages
+- ADC/PWM and communication support
+- sensor, actuator, resistor, divider, driver, and power requirements
+
+The LLM reasons over that context. Deterministic properties such as voltage compatibility, pin capability, ADC support, PlatformIO target, required resistors, level shifting, and wiring-to-firmware symbols are validated separately.
 
 ```text
-I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.
+LLM reasoning
++ trusted electronics knowledge
++ deterministic engineering checks
++ real compilation
+= a build BENCH can defend
 ```
 
-Expected result:
+## Verified Example
 
-- ESP32 DevKit v1 recommendation
-- LDR + 10k resistor voltage divider
-- GPIO34 analog input wiring
-- Arduino/PlatformIO firmware emitting `JUMP:1` and `JUMP:0` over serial
-- beginner build instructions
-- browser-game control through the generated Web Serial demo
+The target prompt is:
 
-## Wiring Visualization
+> I want to make a Flappy Bird controller where covering a light sensor makes the bird jump.
 
-Fritzing can export views through its desktop application, but reliable fully headless server-side generation inside a Linux automation sandbox is not dependable enough for the MVP path. The app therefore uses `lib/renderers/circuitRenderer.ts`, a replaceable renderer interface backed by `circuit.json`.
+`examples/flappy-light-controller/` contains a captured real run with:
 
-The current renderer supports the known beginner set needed for the demo and is structured so a later Fritzing renderer can replace it without changing agent outputs.
+- ESP32 DevKit v1 and LDR plus 10k resistor voltage divider
+- GPIO34 analog input and 3.3 V-safe wiring
+- firmware emitting `JUMP:1` / `JUMP:0` over USB serial
+- seven passing deterministic knowledge checks
+- successful Daytona compile on attempt one
+- final phase `READY_TO_BUILD`
 
-## Environment Variables
+The full compile evidence is preserved in the example's `project_spec.json`.
 
-Copy `.env.example` to `.env.local` and fill in:
+## Local Setup
+
+```bash
+pnpm install
+cp .env.example .env.local
+pnpm dev
+```
+
+Open `http://localhost:3000`.
+
+Required production intent:
 
 ```text
 MODEL_PROVIDER=nosana
 NOSANA_INFERENCE_ENDPOINT=https://your-nosana-endpoint.example/v1/chat/completions
-NOSANA_INFERENCE_API_KEY=
 MODEL_NAME=Qwen/Qwen3-8B
-
-NOSANA_CONTROL_API_KEY=
-NOSANA_DEPLOYMENT_ID=
-NOSANA_MARKET=CA5pMpqkYFKtme7K31pNB1s62X2SdhEv1nN9RdxKCpuQ
-NOSANA_TIMEOUT_MINUTES=120
-
-DAYTONA_API_KEY=
+DAYTONA_API_KEY=your-server-side-key
 DAYTONA_API_URL=https://app.daytona.io/api
-# Optional. Blank uses the organization's default region.
-DAYTONA_TARGET=
-
-ALLOW_MOCK_COMPILE=1
 ```
 
-Important: `ALLOW_MOCK_COMPILE=1` keeps local demos moving when credentials are absent, but it does not create a verified build.
+See `.env.example` for Nosana deployment-control settings and optional development flags. Secrets belong only in `.env.local`, which is gitignored.
 
 ## Nosana Deployment
 
-The lifecycle is explicit so the GPU is not left running accidentally:
-
 ```bash
-# Read-only: validate authentication, credits, market, and job definition
-pnpm nosana:check
-
-# Create a draft, start it, wait for Qwen, and save its inference URL
-pnpm nosana:deploy
-
-# Publish a corrected job definition as a new deployment revision
-pnpm nosana:update
-
-# Inspect deployment, endpoint health, and remaining credits
-pnpm nosana:status
-
-# Stop the GPU service when the demo is finished
-pnpm nosana:stop
+pnpm nosana:check   # Validate auth, credits, market, and job definition
+pnpm nosana:deploy  # Start Qwen3 8B, wait for readiness, and save the endpoint
+pnpm nosana:status  # Inspect deployment and endpoint health
+pnpm nosana:stop    # Stop GPU usage and return local development to mock mode
 ```
-
-`nosana:deploy` updates `.env.local`; restart the Next.js process afterward. Agent activity should then report `provider=nosana` for all four specialist calls. `nosana:stop` returns `MODEL_PROVIDER` to `mock` so the local app remains usable without calling a stopped endpoint.
-
-## Run
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Then open `http://localhost:3000`.
 
 ## Validate
 
@@ -188,3 +182,21 @@ Then open `http://localhost:3000`.
 pnpm typecheck
 pnpm build
 ```
+
+## Why BENCH?
+
+Physical computing should begin with:
+
+> What do you want to make?
+
+not:
+
+> Which microcontroller do you already know how to use?
+
+BENCH combines specialist AI agents, trusted electronics knowledge, deterministic engineering checks, and real execution to give beginners one guided path from:
+
+> I want to make this.
+
+to:
+
+> I made this.

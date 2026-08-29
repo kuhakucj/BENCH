@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<body>
+<button id="connect">Connect ESP32</button>
+<canvas id="game" width="420" height="520"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let y = 260, velocity = 0, jump = false;
+function draw() {
+  velocity += 0.35;
+  if (jump) velocity = -5.5;
+  y = Math.max(20, Math.min(500, y + velocity));
+  ctx.fillStyle = '#101012';
+  ctx.fillRect(0, 0, 420, 520);
+  ctx.fillStyle = '#ccff00';
+  ctx.beginPath();
+  ctx.arc(120, y, 18, 0, Math.PI * 2);
+  ctx.fill();
+  requestAnimationFrame(draw);
+}
+draw();
+document.getElementById('connect').onclick = async () => {
+  const port = await navigator.serial.requestPort();
+  await port.open({ baudRate: 115200 });
+  const reader = port.readable.pipeThrough(new TextDecoderStream()).getReader();
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (value.includes('JUMP:1')) jump = true;
+    if (value.includes('JUMP:0')) jump = false;
+  }
+};
+</script>
+</body>
+</html>

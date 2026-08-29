@@ -1,0 +1,868 @@
+{
+  "id": "bench-1787990077425",
+  "idea": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+  "phase": "READY_TO_BUILD",
+  "hardware": {
+    "selectedMcu": "ESP32 DevKit v1",
+    "difficulty": "Beginner",
+    "bom": [
+      {
+        "item": "ESP32 DevKit v1",
+        "qty": 1,
+        "purpose": "Reads the light sensor and sends jump state over USB serial.",
+        "beginnerNote": "More capable than an Uno and has plenty of analog-capable pins."
+      },
+      {
+        "item": "LDR photoresistor",
+        "qty": 1,
+        "purpose": "Detects covered versus uncovered light level.",
+        "beginnerNote": "Its resistance changes with light."
+      },
+      {
+        "item": "10k ohm resistor",
+        "qty": 1,
+        "purpose": "Forms a voltage divider with the LDR.",
+        "beginnerNote": "Needed so the ESP32 can read a voltage, not just a loose sensor."
+      },
+      {
+        "item": "Breadboard",
+        "qty": 1,
+        "purpose": "No-solder prototype area.",
+        "beginnerNote": "Keeps the build reversible."
+      },
+      {
+        "item": "Jumper wires",
+        "qty": 6,
+        "purpose": "Connects the circuit.",
+        "beginnerNote": "Use red for 3.3V and black for ground."
+      },
+      {
+        "item": "USB cable",
+        "qty": 1,
+        "purpose": "Powers and programs the ESP32.",
+        "beginnerNote": "Also carries serial data to the browser bridge."
+      }
+    ],
+    "mcuComparison": [
+      {
+        "mcu": "ESP32 DevKit v1",
+        "fit": "Best",
+        "rationale": "3.3V logic, analog input, USB serial, fast iteration, and enough room to later add BLE/Wi-Fi."
+      },
+      {
+        "mcu": "Arduino Uno",
+        "fit": "Good",
+        "rationale": "Easy analog reading, but 5V logic makes browser/modern expansion less flexible."
+      },
+      {
+        "mcu": "Arduino Nano",
+        "fit": "Good",
+        "rationale": "Small and beginner friendly, but less headroom than ESP32."
+      },
+      {
+        "mcu": "Raspberry Pi Pico",
+        "fit": "Good",
+        "rationale": "Has native ADC and plenty of GPIO, but the base Pico lacks the ESP32's built-in wireless options."
+      }
+    ],
+    "constraints": [
+      "Use only 3.3V on the ESP32 analog pin.",
+      "GPIO34 is input-only, which is fine for an LDR signal.",
+      "Browser control requires Web Serial or a small local bridge."
+    ],
+    "power": "USB powers the ESP32. The LDR divider uses ESP32 3V3 and GND.",
+    "communications": [
+      "USB serial at 115200 baud",
+      "Optional Web Serial browser bridge"
+    ]
+  },
+  "circuit": {
+    "board": {
+      "id": "esp32-devkit-v1",
+      "name": "ESP32 DevKit v1",
+      "logicVoltage": "3.3V",
+      "platformioEnv": "esp32dev"
+    },
+    "components": [
+      {
+        "id": "ldr1",
+        "type": "LDR",
+        "label": "Light sensor"
+      },
+      {
+        "id": "r1",
+        "type": "resistor",
+        "label": "Pulldown resistor",
+        "value": "10k ohm"
+      },
+      {
+        "id": "breadboard1",
+        "type": "breadboard",
+        "label": "Breadboard"
+      }
+    ],
+    "connections": [
+      {
+        "from": "ESP32 3V3",
+        "to": "LDR leg A",
+        "signal": "3.3V",
+        "wireColor": "red"
+      },
+      {
+        "from": "LDR leg B",
+        "to": "GPIO34 / ADC",
+        "signal": "sensor voltage",
+        "wireColor": "yellow",
+        "note": "This junction is the analog reading point."
+      },
+      {
+        "from": "GPIO34 / ADC",
+        "to": "10k resistor leg A",
+        "signal": "voltage divider midpoint",
+        "wireColor": "yellow"
+      },
+      {
+        "from": "10k resistor leg B",
+        "to": "ESP32 GND",
+        "signal": "ground",
+        "wireColor": "black"
+      }
+    ],
+    "pins": [
+      {
+        "component": "Light sensor divider",
+        "pin": "midpoint",
+        "boardPin": "GPIO34",
+        "mode": "analog input",
+        "firmwareSymbol": "LIGHT_SENSOR_PIN"
+      }
+    ],
+    "protocols": [
+      "ADC",
+      "USB Serial"
+    ],
+    "warnings": [
+      "Do not connect the divider to 5V on ESP32.",
+      "GPIO34 cannot drive outputs; use it only as an input."
+    ]
+  },
+  "firmware": {
+    "target": "esp32dev",
+    "libraries": [],
+    "files": [
+      {
+        "path": "platformio.ini",
+        "contents": "[env:esp32dev]\nplatform = espressif32\nboard = esp32dev\nframework = arduino\nmonitor_speed = 115200\n"
+      },
+      {
+        "path": "src/main.cpp",
+        "contents": "#include <Arduino.h>\n\nconst int LIGHT_SENSOR_PIN = 34;\nconst int THRESHOLD = 1800;\nbool lastJump = false;\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(300);\n  Serial.println(\"BENCH_FLAPPY_READY\");\n}\n\nvoid loop() {\n  int lightValue = analogRead(LIGHT_SENSOR_PIN);\n  bool covered = lightValue < THRESHOLD;\n\n  if (covered != lastJump) {\n    Serial.print(\"JUMP:\");\n    Serial.println(covered ? 1 : 0);\n    lastJump = covered;\n  }\n\n  Serial.print(\"LIGHT:\");\n  Serial.println(lightValue);\n  delay(40);\n}\n"
+      },
+      {
+        "path": "web-serial-demo.html",
+        "contents": "<!doctype html>\n<html>\n<body>\n<button id=\"connect\">Connect ESP32</button>\n<canvas id=\"game\" width=\"420\" height=\"520\"></canvas>\n<script>\nconst canvas = document.getElementById('game');\nconst ctx = canvas.getContext('2d');\nlet y = 260, velocity = 0, jump = false;\nfunction draw() {\n  velocity += 0.35;\n  if (jump) velocity = -5.5;\n  y = Math.max(20, Math.min(500, y + velocity));\n  ctx.fillStyle = '#101012';\n  ctx.fillRect(0, 0, 420, 520);\n  ctx.fillStyle = '#ccff00';\n  ctx.beginPath();\n  ctx.arc(120, y, 18, 0, Math.PI * 2);\n  ctx.fill();\n  requestAnimationFrame(draw);\n}\ndraw();\ndocument.getElementById('connect').onclick = async () => {\n  const port = await navigator.serial.requestPort();\n  await port.open({ baudRate: 115200 });\n  const reader = port.readable.pipeThrough(new TextDecoderStream()).getReader();\n  while (true) {\n    const { value, done } = await reader.read();\n    if (done) break;\n    if (value.includes('JUMP:1')) jump = true;\n    if (value.includes('JUMP:0')) jump = false;\n  }\n};\n</script>\n</body>\n</html>"
+      }
+    ]
+  },
+  "grounding": {
+    "hardware": {
+      "role": "hardware",
+      "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+      "catalogVersion": "2026-08-29-mvp",
+      "componentIds": [
+        "esp32-devkit-v1",
+        "arduino-uno-r3",
+        "arduino-nano",
+        "raspberry-pi-pico",
+        "ldr-photoresistor",
+        "resistor",
+        "voltage-divider",
+        "breadboard",
+        "jumper-wires"
+      ],
+      "facts": [
+        {
+          "id": "esp32-logic-voltage",
+          "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+          "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-wireless",
+          "statement": "ESP32 includes 2.4 GHz Wi-Fi and Bluetooth capabilities.",
+          "beginnerExplanation": "The board can later communicate wirelessly without an extra radio module.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-gpio34",
+          "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+          "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet",
+            "espressif-esp32-gpio"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "uno-capabilities",
+          "statement": "Arduino Uno R3 has 14 digital I/O pins, 6 PWM outputs, and 6 analog inputs.",
+          "beginnerExplanation": "The Uno is easy to learn and has enough analog inputs for a light sensor.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "arduino-uno-r3"
+          ],
+          "componentId": "arduino-uno-r3",
+          "componentName": "Arduino Uno R3",
+          "category": "microcontroller"
+        },
+        {
+          "id": "uno-logic-voltage",
+          "statement": "Arduino Uno R3 operates with 5 V logic.",
+          "beginnerExplanation": "Its pin voltage is different from the ESP32, so sensor wiring cannot always be copied between boards.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "arduino-uno-r3"
+          ],
+          "componentId": "arduino-uno-r3",
+          "componentName": "Arduino Uno R3",
+          "category": "microcontroller"
+        },
+        {
+          "id": "nano-logic-voltage",
+          "statement": "The classic Arduino Nano ATmega328 is a 5 V board with analog inputs and PWM-capable digital pins.",
+          "beginnerExplanation": "The Nano is compact but uses the same 5 V logic family as the classic Uno.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "arduino-nano-datasheet"
+          ],
+          "componentId": "arduino-nano",
+          "componentName": "Arduino Nano ATmega328",
+          "category": "microcontroller"
+        },
+        {
+          "id": "pico-capabilities",
+          "statement": "Raspberry Pi Pico provides 26 multifunction GPIO pins, including 3 exposed ADC inputs, plus PWM, I2C, SPI, and UART.",
+          "beginnerExplanation": "The Pico can read a light sensor and control many common parts, but the base Pico has no built-in wireless radio.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "raspberry-pi-pico"
+          ],
+          "componentId": "raspberry-pi-pico",
+          "componentName": "Raspberry Pi Pico",
+          "category": "microcontroller"
+        },
+        {
+          "id": "pico-logic-voltage",
+          "statement": "Raspberry Pi Pico GPIO uses 3.3 V logic.",
+          "beginnerExplanation": "Keep signals connected to Pico GPIO at 3.3 V.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "raspberry-pi-pico"
+          ],
+          "componentId": "raspberry-pi-pico",
+          "componentName": "Raspberry Pi Pico",
+          "category": "microcontroller"
+        },
+        {
+          "id": "ldr-divider",
+          "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+          "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        },
+        {
+          "id": "resistor-purpose",
+          "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+          "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "arduino-built-in-examples",
+            "adafruit-photocell"
+          ],
+          "componentId": "resistor",
+          "componentName": "Fixed resistor",
+          "category": "supporting"
+        },
+        {
+          "id": "divider-purpose",
+          "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+          "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "voltage-divider",
+          "componentName": "Voltage divider",
+          "category": "supporting"
+        }
+      ],
+      "sources": [
+        {
+          "id": "espressif-esp32-datasheet",
+          "title": "ESP32 Series Datasheet",
+          "publisher": "Espressif Systems",
+          "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+          "kind": "manufacturer-datasheet"
+        },
+        {
+          "id": "espressif-esp32-gpio",
+          "title": "ESP32 GPIO and RTC GPIO",
+          "publisher": "Espressif Systems",
+          "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "arduino-uno-r3",
+          "title": "Arduino UNO R3 Documentation",
+          "publisher": "Arduino",
+          "url": "https://docs.arduino.cc/hardware/uno-rev3",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "arduino-nano-datasheet",
+          "title": "Arduino Nano Datasheet",
+          "publisher": "Arduino",
+          "url": "https://docs.arduino.cc/resources/datasheets/A000005-datasheet.pdf",
+          "kind": "manufacturer-datasheet"
+        },
+        {
+          "id": "raspberry-pi-pico",
+          "title": "Pico-series Microcontrollers",
+          "publisher": "Raspberry Pi",
+          "url": "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "adafruit-photocell",
+          "title": "Photocells",
+          "publisher": "Adafruit Learning System",
+          "url": "https://learn.adafruit.com/photocells?view=all",
+          "kind": "trusted-beginner-reference"
+        },
+        {
+          "id": "arduino-built-in-examples",
+          "title": "Arduino Built-in Examples",
+          "publisher": "Arduino",
+          "url": "https://docs.arduino.cc/built-in-examples",
+          "kind": "manufacturer-documentation"
+        }
+      ]
+    },
+    "wiring": {
+      "role": "wiring",
+      "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+      "catalogVersion": "2026-08-29-mvp",
+      "componentIds": [
+        "esp32-devkit-v1",
+        "ldr-photoresistor",
+        "resistor",
+        "voltage-divider",
+        "breadboard",
+        "jumper-wires"
+      ],
+      "facts": [
+        {
+          "id": "esp32-logic-voltage",
+          "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+          "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-gpio34",
+          "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+          "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet",
+            "espressif-esp32-gpio"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "ldr-divider",
+          "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+          "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        },
+        {
+          "id": "ldr-rail-selection",
+          "statement": "Power the divider from the board voltage that matches the analog input maximum.",
+          "beginnerExplanation": "For an ESP32, build the divider from 3.3 V, not 5 V.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell",
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        },
+        {
+          "id": "resistor-purpose",
+          "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+          "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "arduino-built-in-examples",
+            "adafruit-photocell"
+          ],
+          "componentId": "resistor",
+          "componentName": "Fixed resistor",
+          "category": "supporting"
+        },
+        {
+          "id": "divider-purpose",
+          "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+          "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "voltage-divider",
+          "componentName": "Voltage divider",
+          "category": "supporting"
+        },
+        {
+          "id": "breadboard-layout",
+          "statement": "Breadboard power rails and terminal strips must be connected according to the board's internal row layout.",
+          "beginnerExplanation": "Rows are connected internally, but the center gap and split power rails are not automatically joined.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "arduino-built-in-examples"
+          ],
+          "componentId": "breadboard",
+          "componentName": "Solderless breadboard",
+          "category": "supporting"
+        },
+        {
+          "id": "wire-colors",
+          "statement": "Consistent wire colors make beginner circuits easier to inspect: red for power, black for ground, and another color for signals.",
+          "beginnerExplanation": "Color coding helps you catch wiring mistakes before power-up.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "arduino-built-in-examples"
+          ],
+          "componentId": "jumper-wires",
+          "componentName": "Jumper wires",
+          "category": "supporting"
+        }
+      ],
+      "sources": [
+        {
+          "id": "espressif-esp32-datasheet",
+          "title": "ESP32 Series Datasheet",
+          "publisher": "Espressif Systems",
+          "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+          "kind": "manufacturer-datasheet"
+        },
+        {
+          "id": "espressif-esp32-gpio",
+          "title": "ESP32 GPIO and RTC GPIO",
+          "publisher": "Espressif Systems",
+          "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "adafruit-photocell",
+          "title": "Photocells",
+          "publisher": "Adafruit Learning System",
+          "url": "https://learn.adafruit.com/photocells?view=all",
+          "kind": "trusted-beginner-reference"
+        },
+        {
+          "id": "arduino-built-in-examples",
+          "title": "Arduino Built-in Examples",
+          "publisher": "Arduino",
+          "url": "https://docs.arduino.cc/built-in-examples",
+          "kind": "manufacturer-documentation"
+        }
+      ]
+    },
+    "firmware": {
+      "role": "firmware",
+      "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+      "catalogVersion": "2026-08-29-mvp",
+      "componentIds": [
+        "esp32-devkit-v1",
+        "ldr-photoresistor",
+        "resistor",
+        "voltage-divider",
+        "breadboard",
+        "jumper-wires"
+      ],
+      "facts": [
+        {
+          "id": "esp32-gpio34",
+          "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+          "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet",
+            "espressif-esp32-gpio"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-platformio-target",
+          "statement": "The generic ESP32 development-board PlatformIO environment uses board ID esp32dev.",
+          "beginnerExplanation": "Bench compiles this board as esp32dev in PlatformIO.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "platformio-esp32dev"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "ldr-divider",
+          "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+          "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        }
+      ],
+      "sources": [
+        {
+          "id": "espressif-esp32-datasheet",
+          "title": "ESP32 Series Datasheet",
+          "publisher": "Espressif Systems",
+          "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+          "kind": "manufacturer-datasheet"
+        },
+        {
+          "id": "espressif-esp32-gpio",
+          "title": "ESP32 GPIO and RTC GPIO",
+          "publisher": "Espressif Systems",
+          "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "platformio-esp32dev",
+          "title": "Espressif 32 Platform",
+          "publisher": "PlatformIO",
+          "url": "https://docs.platformio.org/en/latest/platforms/espressif32.html",
+          "kind": "toolchain-documentation"
+        },
+        {
+          "id": "adafruit-photocell",
+          "title": "Photocells",
+          "publisher": "Adafruit Learning System",
+          "url": "https://learn.adafruit.com/photocells?view=all",
+          "kind": "trusted-beginner-reference"
+        }
+      ]
+    },
+    "supervisor": {
+      "role": "supervisor",
+      "query": "I want to build a physical controller for Flappy Bird where covering/uncovering a light sensor controls the bird.",
+      "catalogVersion": "2026-08-29-mvp",
+      "componentIds": [
+        "esp32-devkit-v1",
+        "ldr-photoresistor",
+        "resistor",
+        "voltage-divider",
+        "breadboard",
+        "jumper-wires"
+      ],
+      "facts": [
+        {
+          "id": "esp32-logic-voltage",
+          "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.",
+          "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-gpio34",
+          "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.",
+          "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "espressif-esp32-datasheet",
+            "espressif-esp32-gpio"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "esp32-platformio-target",
+          "statement": "The generic ESP32 development-board PlatformIO environment uses board ID esp32dev.",
+          "beginnerExplanation": "Bench compiles this board as esp32dev in PlatformIO.",
+          "safetyCritical": false,
+          "sourceIds": [
+            "platformio-esp32dev"
+          ],
+          "componentId": "esp32-devkit-v1",
+          "componentName": "ESP32 DevKit v1",
+          "category": "microcontroller"
+        },
+        {
+          "id": "ldr-divider",
+          "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.",
+          "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        },
+        {
+          "id": "ldr-rail-selection",
+          "statement": "Power the divider from the board voltage that matches the analog input maximum.",
+          "beginnerExplanation": "For an ESP32, build the divider from 3.3 V, not 5 V.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell",
+            "espressif-esp32-datasheet"
+          ],
+          "componentId": "ldr-photoresistor",
+          "componentName": "LDR photoresistor",
+          "category": "sensor"
+        },
+        {
+          "id": "resistor-purpose",
+          "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.",
+          "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "arduino-built-in-examples",
+            "adafruit-photocell"
+          ],
+          "componentId": "resistor",
+          "componentName": "Fixed resistor",
+          "category": "supporting"
+        },
+        {
+          "id": "divider-purpose",
+          "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.",
+          "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.",
+          "safetyCritical": true,
+          "sourceIds": [
+            "adafruit-photocell"
+          ],
+          "componentId": "voltage-divider",
+          "componentName": "Voltage divider",
+          "category": "supporting"
+        }
+      ],
+      "sources": [
+        {
+          "id": "espressif-esp32-datasheet",
+          "title": "ESP32 Series Datasheet",
+          "publisher": "Espressif Systems",
+          "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+          "kind": "manufacturer-datasheet"
+        },
+        {
+          "id": "espressif-esp32-gpio",
+          "title": "ESP32 GPIO and RTC GPIO",
+          "publisher": "Espressif Systems",
+          "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html",
+          "kind": "manufacturer-documentation"
+        },
+        {
+          "id": "platformio-esp32dev",
+          "title": "Espressif 32 Platform",
+          "publisher": "PlatformIO",
+          "url": "https://docs.platformio.org/en/latest/platforms/espressif32.html",
+          "kind": "toolchain-documentation"
+        },
+        {
+          "id": "adafruit-photocell",
+          "title": "Photocells",
+          "publisher": "Adafruit Learning System",
+          "url": "https://learn.adafruit.com/photocells?view=all",
+          "kind": "trusted-beginner-reference"
+        },
+        {
+          "id": "arduino-built-in-examples",
+          "title": "Arduino Built-in Examples",
+          "publisher": "Arduino",
+          "url": "https://docs.arduino.cc/built-in-examples",
+          "kind": "manufacturer-documentation"
+        }
+      ]
+    },
+    "decisions": [
+      {
+        "id": "mcu-selection",
+        "title": "Why ESP32 DevKit v1?",
+        "summary": "Bench compared supported boards using verified capabilities before asking the model to recommend one.",
+        "reasons": [
+          "Do not send a 5 V sensor signal straight into an ESP32 pin.",
+          "The board can later communicate wirelessly without an extra radio module.",
+          "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor."
+        ],
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ]
+      },
+      {
+        "id": "circuit-safety",
+        "title": "Why this wiring?",
+        "summary": "Safety-critical wiring choices are checked against the component catalog.",
+        "reasons": [
+          "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.",
+          "For an ESP32, build the divider from 3.3 V, not 5 V.",
+          "The resistor value and its exact position are part of the circuit, not optional decoration.",
+          "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage."
+        ],
+        "sourceIds": [
+          "adafruit-photocell",
+          "espressif-esp32-datasheet",
+          "arduino-built-in-examples"
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "id": "grounding-present",
+        "status": "pass",
+        "message": "7 relevant facts from 5 trusted sources were available to the supervisor.",
+        "beginnerExplanation": "Bench checked this project against retrieved documentation instead of relying only on model memory.",
+        "factIds": [],
+        "sourceIds": []
+      },
+      {
+        "id": "known-board",
+        "status": "pass",
+        "message": "ESP32 DevKit v1 matched knowledge component esp32-devkit-v1.",
+        "beginnerExplanation": "The selected board has reviewed voltage, pin, and toolchain data.",
+        "factIds": [],
+        "sourceIds": []
+      },
+      {
+        "id": "logic-voltage",
+        "status": "pass",
+        "message": "Circuit logic voltage 3.3V matches the verified 3.3 V board value.",
+        "beginnerExplanation": "The signal voltage matches the board.",
+        "factIds": [
+          "esp32-logic-voltage"
+        ],
+        "sourceIds": [
+          "espressif-esp32-datasheet"
+        ]
+      },
+      {
+        "id": "platformio-target",
+        "status": "pass",
+        "message": "Circuit and firmware use verified PlatformIO target esp32dev.",
+        "beginnerExplanation": "The compiler is configured for the selected board.",
+        "factIds": [],
+        "sourceIds": []
+      },
+      {
+        "id": "pin-gpio34",
+        "status": "pass",
+        "message": "GPIO34 is a verified usable pin on ESP32 DevKit v1.",
+        "beginnerExplanation": "Bench verified this pin assignment against the board record.",
+        "factIds": [],
+        "sourceIds": []
+      },
+      {
+        "id": "adc-gpio34",
+        "status": "pass",
+        "message": "GPIO34 is verified for ADC input.",
+        "beginnerExplanation": "This pin can measure the sensor voltage.",
+        "factIds": [
+          "esp32-gpio34"
+        ],
+        "sourceIds": [
+          "espressif-esp32-datasheet",
+          "espressif-esp32-gpio"
+        ]
+      },
+      {
+        "id": "ldr-divider",
+        "status": "pass",
+        "message": "The LDR uses a documented 10k voltage divider tied to board-safe power and ground.",
+        "beginnerExplanation": "The sensor can now produce a safe changing voltage.",
+        "factIds": [
+          "ldr-divider",
+          "ldr-rail-selection"
+        ],
+        "sourceIds": [
+          "adafruit-photocell",
+          "espressif-esp32-datasheet"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "verified": true,
+    "compileProvider": "daytona",
+    "attempts": 1,
+    "logs": [
+      "Collecting platformio\n  Downloading platformio-6.1.19-py3-none-any.whl.metadata (7.2 kB)\nCollecting bottle==0.13.* (from platformio)\n  Downloading bottle-0.13.4-py2.py3-none-any.whl.metadata (1.6 kB)\nCollecting click<8.4,>=8.0.4 (from platformio)\n  Downloading click-8.3.3-py3-none-any.whl.metadata (2.6 kB)\nCollecting colorama (from platformio)\n  Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)\nCollecting marshmallow==3.* (from platformio)\n  Downloading marshmallow-3.26.2-py3-none-any.whl.metadata (7.3 kB)\nCollecting pyelftools<1,>=0.27 (from platformio)\n  Downloading pyelftools-0.33-py3-none-any.whl.metadata (1.0 kB)\nCollecting pyserial==3.5.* (from platformio)\n  Downloading pyserial-3.5-py2.py3-none-any.whl.metadata (1.6 kB)\nCollecting requests==2.* (from platformio)\n  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)\nCollecting semantic_version==2.10.* (from platformio)\n  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)\nCollecting tabulate==0.* (from platformio)\n  Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)\nCollecting ajsonrpc==1.2.* (from platformio)\n  Downloading ajsonrpc-1.2.0-py3-none-any.whl.metadata (6.9 kB)\nCollecting starlette<0.53,>=0.19 (from platformio)\n  Downloading starlette-0.52.1-py3-none-any.whl.metadata (6.3 kB)\nCollecting uvicorn<0.41,>=0.16 (from platformio)\n  Downloading uvicorn-0.40.0-py3-none-any.whl.metadata (6.7 kB)\nCollecting wsproto==1.* (from platformio)\n  Downloading wsproto-1.3.2-py3-none-any.whl.metadata (5.2 kB)\nCollecting packaging>=17.0 (from marshmallow==3.*->platformio)\n  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)\nCollecting charset_normalizer<4,>=2 (from requests==2.*->platformio)\n  Downloading charset_normalizer-3.5.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)\nCollecting idna<4,>=2.5 (from requests==2.*->platformio)\n  Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)\nCollecting urllib3<3,>=1.26 (from requests==2.*->platformio)\n  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)\nCollecting certifi>=2023.5.7 (from requests==2.*->platformio)\n  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)\nCollecting anyio<5,>=3.6.2 (from starlette<0.53,>=0.19->platformio)\n  Downloading anyio-4.14.2-py3-none-any.whl.metadata (4.6 kB)\nCollecting h11>=0.8 (from uvicorn<0.41,>=0.16->platformio)\n  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)\nDownloading platformio-6.1.19-py3-none-any.whl (421 kB)\nDownloading ajsonrpc-1.2.0-py3-none-any.whl (22 kB)\nDownloading bottle-0.13.4-py2.py3-none-any.whl (103 kB)\nDownloading click-8.3.3-py3-none-any.whl (110 kB)\nDownloading marshmallow-3.26.2-py3-none-any.whl (50 kB)\nDownloading pyelftools-0.33-py3-none-any.whl (201 kB)\nDownloading pyserial-3.5-py2.py3-none-any.whl (90 kB)\nDownloading requests-2.34.2-py3-none-any.whl (73 kB)\nDownloading charset_normalizer-3.5.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (250 kB)\nDownloading idna-3.19-py3-none-any.whl (68 kB)\nDownloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)\nDownloading starlette-0.52.1-py3-none-any.whl (74 kB)\nDownloading anyio-4.14.2-py3-none-any.whl (125 kB)\nDownloading tabulate-0.10.0-py3-none-any.whl (39 kB)\nDownloading urllib3-2.7.0-py3-none-any.whl (131 kB)\nDownloading uvicorn-0.40.0-py3-none-any.whl (68 kB)\nDownloading wsproto-1.3.2-py3-none-any.whl (24 kB)\nDownloading h11-0.16.0-py3-none-any.whl (37 kB)\nDownloading certifi-2026.7.22-py3-none-any.whl (136 kB)\nDownloading packaging-26.3-py3-none-any.whl (129 kB)\nDownloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)\nInstalling collected packages: pyserial, bottle, urllib3, tabulate, semantic_version, pyelftools, packaging, idna, h11, colorama, click, charset_normalizer, certifi, ajsonrpc, wsproto, uvicorn, requests, marshmallow, anyio, starlette, platformio\n\nSuccessfully installed ajsonrpc-1.2.0 anyio-4.14.2 bottle-0.13.4 certifi-2026.7.22 charset_normalizer-3.5.1 click-8.3.3 colorama-0.4.6 h11-0.16.0 idna-3.19 marshmallow-3.26.2 packaging-26.3 platformio-6.1.19 pyelftools-0.33 pyserial-3.5 requests-2.34.2 semantic_version-2.10.0 starlette-0.52.1 tabulate-0.10.0 urllib3-2.7.0 uvicorn-0.40.0 wsproto-1.3.2\n********************************************************************************\nIf you like PlatformIO, please:\n- star it on GitHub > https://github.com/platformio/platformio-core\n- follow us on LinkedIn to stay up-to-date on the latest project news > https://www.linkedin.com/company/platformio/\n- try PlatformIO IDE for embedded development > https://platformio.org/platformio-ide\n********************************************************************************\n\nProcessing esp32dev (platform: espressif32; board: esp32dev; framework: arduino)\n--------------------------------------------------------------------------------\nPlatform Manager: Installing espressif32\nHTTPClientError: \n\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\n\r100 16.8M  100 16.8M    0     0  63.2M      0 --:--:-- --:--:-- --:--:-- 63.2M\n\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\n\r100  108k  100  108k    0     0   592k      0 --:--:-- --:--:-- --:--:--  592k\n\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r100  604k  100  604k    0     0  4131k      0 --:--:-- --:--:-- --:--:-- 4141k\n\nCollecting esptool==4.5.1\n  Downloading esptool-4.5.1.tar.gz (252 kB)\n  Installing build dependencies: started\n  Installing build dependencies: finished with status 'done'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status 'done'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status 'done'\nCollecting bitstring>=3.1.6 (from esptool==4.5.1)\n  Downloading bitstring-4.4.0-py3-none-any.whl.metadata (5.6 kB)\nRequirement already satisfied: cryptography>=2.1.4 in /usr/local/lib/python3.14/site-packages (from esptool==4.5.1) (48.0.0)\nCollecting ecdsa>=0.16.0 (from esptool==4.5.1)\n  Downloading ecdsa-0.19.2-py2.py3-none-any.whl.metadata (29 kB)\nCollecting pyserial>=3.0 (from esptool==4.5.1)\n  Using cached pyserial-3.5-py2.py3-none-any.whl.metadata (1.6 kB)\nCollecting reedsolo<=1.6.0,>=1.5.3 (from esptool==4.5.1)\n  Downloading reedsolo-1.6.0.tar.gz (278 kB)\n  Installing build dependencies: started\n  Installing build dependencies: finished with status 'done'\n  Getting requirements to build wheel: started\n  Getting requirements to build wheel: finished with status 'done'\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status 'done'\nCollecting bitarray<4.0,>=3.0.0 (from bitstring>=3.1.6->esptool==4.5.1)\n  Downloading bitarray-3.10.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (36 kB)\nCollecting tibs<0.6,>=0.5.6 (from bitstring>=3.1.6->esptool==4.5.1)\n  Downloading tibs-0.5.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (8.1 kB)\nRequirement already satisfied: cffi>=2.0.0 in /usr/local/lib/python3.14/site-packages (from cryptography>=2.1.4->esptool==4.5.1) (2.0.0)\nRequirement already satisfied: pycparser in /usr/local/lib/python3.14/site-packages (from cffi>=2.0.0->cryptography>=2.1.4->esptool==4.5.1) (3.0)\nRequirement already satisfied: six>=1.9.0 in /usr/local/lib/python3.14/site-packages (from ecdsa>=0.16.0->esptool==4.5.1) (1.17.0)\nDownloading bitstring-4.4.0-py3-none-any.whl (76 kB)\nDownloading bitarray-3.10.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (371 kB)\nDownloading tibs-0.5.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (423 kB)\nDownloading ecdsa-0.19.2-py2.py3-none-any.whl (150 kB)\nUsing cached pyserial-3.5-py2.py3-none-any.whl (90 kB)\nBuilding wheels for collected packages: esptool, reedsolo\n  Building wheel for esptool (pyproject.toml): started\n  Building wheel for esptool (pyproject.toml): finished with status 'done'\n  Created wheel for esptool: filename=esptool-4.5.1-py3-none-any.whl size=321010 sha256=b04b3b3e67e6c12042dcb67a6bf8d858933d8c0d82b83d7504fb148e89c3ba73\n  Stored in directory: /home/daytona/.cache/pip/wheels/e5/55/cc/2914516e059f287f269bac51f20f7701b61c02f835c3dd0ed6\n  Building wheel for reedsolo (pyproject.toml): started\n  Building wheel for reedsolo (pyproject.toml): finished with status 'done'\n  Created wheel for reedsolo: filename=reedsolo-1.6.0-py3-none-any.whl size=31140 sha256=bf9d46fd89020c37bfc6196c6d56340a80487ee61cf9fe46043e1473c7f194f4\n  Stored in directory: /home/daytona/.cache/pip/wheels/a7/b7/c4/405be7701ddc0498cb0679ba1711d9eb9a206f0f50c2909489\nSuccessfully built esptool reedsolo\nInstalling collected packages: reedsolo, pyserial, tibs, ecdsa, bitarray, bitstring, esptool\n  WARNING: The scripts pyserial-miniterm and pyserial-ports are installed in '/home/daytona/.local/bin' which is not on PATH.\n  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.\n\nSuccessfully installed bitarray-3.10.1 bitstring-4.4.0 ecdsa-0.19.2 esptool-4.5.1 pyserial-3.5 reedsolo-1.6.0 tibs-0.5.7\n\n[notice] A new release of pip is available: 26.0.1 -> 26.2.1\n[notice] To update, run: pip install --upgrade pip\n\nError initializing instance: Error loading hardware platform: discovery builtin:serial-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:mdns-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:serial-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:mdns-discovery not found\nDownloading packages...\n\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 0 B / 90.02 MiB    0.00%\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 0 B / 90.02 MiB    0.00%\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 5.51 MiB / 90.02 MiB    6.12% 00m06s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 13.22 MiB / 90.02 MiB   14.69% 00m03s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 19.16 MiB / 90.02 MiB   21.28% 00m02s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 25.03 MiB / 90.02 MiB   27.80% 00m02s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 25.03 MiB / 90.02 MiB   27.80% 00m02s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 33.19 MiB / 90.02 MiB   36.87% 00m02s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 39.36 MiB / 90.02 MiB   43.72% 00m02s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 47.71 MiB / 90.02 MiB   53.00% 00m01s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 56.12 MiB / 90.02 MiB   62.34% 00m01s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 56.12 MiB / 90.02 MiB   62.34% 00m01s\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 68.33 MiB / 90.02 MiB   75.90%\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 79.75 MiB / 90.02 MiB   88.58%\resp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 downloaded\n\resp32:esptool_py@4.5.1 0 B / 94.65 KiB    0.00%\resp32:esptool_py@4.5.1 downloaded\n\resp32:mkspiffs@0.2.3 0 B / 49.46 KiB    0.00%\resp32:mkspiffs@0.2.3 downloaded\n\resp32:mklittlefs@3.0.0-gnu12-dc7f933 0 B / 45.68 KiB    0.00%\resp32:mklittlefs@3.0.0-gnu12-dc7f933 downloaded\n\resp32:esp32@2.0.17 0 B / 242.86 MiB    0.00%\resp32:esp32@2.0.17 0 B / 242.86 MiB    0.00%\resp32:esp32@2.0.17 11.86 MiB / 242.86 MiB    4.88% 00m07s\resp32:esp32@2.0.17 22.45 MiB / 242.86 MiB    9.25% 00m05s\resp32:esp32@2.0.17 32.64 MiB / 242.86 MiB   13.44% 00m05s\resp32:esp32@2.0.17 46.98 MiB / 242.86 MiB   19.35% 00m04s\resp32:esp32@2.0.17 46.98 MiB / 242.86 MiB   19.35% 00m03s\resp32:esp32@2.0.17 62.66 MiB / 242.86 MiB   25.80% 00m03s\resp32:esp32@2.0.17 71.30 MiB / 242.86 MiB   29.36% 00m03s\resp32:esp32@2.0.17 80.97 MiB / 242.86 MiB   33.34% 00m03s\resp32:esp32@2.0.17 90.11 MiB / 242.86 MiB   37.10% 00m03s\resp32:esp32@2.0.17 90.11 MiB / 242.86 MiB   37.10% 00m03s\resp32:esp32@2.0.17 96.59 MiB / 242.86 MiB   39.77% 00m03s\resp32:esp32@2.0.17 102.26 MiB / 242.86 MiB   42.11% 00m03s\resp32:esp32@2.0.17 107.50 MiB / 242.86 MiB   44.26% 00m03s\resp32:esp32@2.0.17 114.98 MiB / 242.86 MiB   47.34% 00m03s\resp32:esp32@2.0.17 114.98 MiB / 242.86 MiB   47.34% 00m03s\resp32:esp32@2.0.17 124.86 MiB / 242.86 MiB   51.41% 00m03s\resp32:esp32@2.0.17 136.72 MiB / 242.86 MiB   56.30% 00m02s\resp32:esp32@2.0.17 152.41 MiB / 242.86 MiB   62.75% 00m02s\resp32:esp32@2.0.17 167.06 MiB / 242.86 MiB   68.79% 00m01s\resp32:esp32@2.0.17 167.06 MiB / 242.86 MiB   68.79% 00m01s\resp32:esp32@2.0.17 177.42 MiB / 242.86 MiB   73.05% 00m01s\resp32:esp32@2.0.17 191.69 MiB / 242.86 MiB   78.93% 00m01s\resp32:esp32@2.0.17 203.83 MiB / 242.86 MiB   83.93%\resp32:esp32@2.0.17 218.54 MiB / 242.86 MiB   89.98%\resp32:esp32@2.0.17 218.54 MiB / 242.86 MiB   89.98%\resp32:esp32@2.0.17 downloaded\nInstalling esp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0...\nSkipping tool configuration....\nesp32:xtensa-esp32-elf-gcc@esp-2021r2-patch5-8.4.0 installed\nInstalling esp32:esptool_py@4.5.1...\nSkipping tool configuration....\nesp32:esptool_py@4.5.1 installed\nInstalling esp32:mkspiffs@0.2.3...\nSkipping tool configuration....\nesp32:mkspiffs@0.2.3 installed\nInstalling esp32:mklittlefs@3.0.0-gnu12-dc7f933...\nSkipping tool configuration....\nesp32:mklittlefs@3.0.0-gnu12-dc7f933 installed\nInstalling platform esp32:esp32@2.0.17...\nSkipping platform configuration....\nPlatform esp32:esp32@2.0.17 installed\n\nError initializing instance: Error loading hardware platform: discovery builtin:serial-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:mdns-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:dfu-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:serial-discovery not found\nError initializing instance: Error loading hardware platform: discovery builtin:mdns-discovery not found\n/home/daytona/.arduino15/packages/esp32/tools/esptool_py/4.5.1/esptool/cmds.py:152: SyntaxWarning: 'return' in a 'finally' block\n  return inst\nSketch uses 268693 bytes (20%) of program storage space. Maximum is 1310720 bytes.\nGlobal variables use 21576 bytes (6%) of dynamic memory, leaving 306104 bytes for local variables. Maximum is 327680 bytes.\n"
+    ],
+    "supervisorFindings": [
+      "Hardware, wiring, firmware symbols, and PlatformIO target are internally consistent."
+    ]
+  },
+  "buildInstructions": [
+    "Place the ESP32 across the center gap of the breadboard.",
+    "Connect one LDR leg to ESP32 3V3.",
+    "Connect the other LDR leg to GPIO34 and to one side of the 10k resistor.",
+    "Connect the other side of the 10k resistor to ESP32 GND.",
+    "Flash the generated PlatformIO firmware.",
+    "Open the included Web Serial demo, connect to the ESP32, and cover the LDR to trigger jumps."
+  ],
+  "warnings": [
+    "Use only 3.3V on the ESP32 analog pin.",
+    "GPIO34 is input-only, which is fine for an LDR signal.",
+    "Browser control requires Web Serial or a small local bridge.",
+    "Do not connect the divider to 5V on ESP32.",
+    "GPIO34 cannot drive outputs; use it only as an input."
+  ]
+}
