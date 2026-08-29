@@ -1,0 +1,133 @@
+{
+  "version": "2026-08-29-mvp",
+  "sources": [
+    { "id": "espressif-esp32-datasheet", "title": "ESP32 Series Datasheet", "publisher": "Espressif Systems", "url": "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf", "kind": "manufacturer-datasheet" },
+    { "id": "espressif-esp32-gpio", "title": "ESP32 GPIO and RTC GPIO", "publisher": "Espressif Systems", "url": "https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/gpio.html", "kind": "manufacturer-documentation" },
+    { "id": "arduino-uno-r3", "title": "Arduino UNO R3 Documentation", "publisher": "Arduino", "url": "https://docs.arduino.cc/hardware/uno-rev3", "kind": "manufacturer-documentation" },
+    { "id": "arduino-nano-datasheet", "title": "Arduino Nano Datasheet", "publisher": "Arduino", "url": "https://docs.arduino.cc/resources/datasheets/A000005-datasheet.pdf", "kind": "manufacturer-datasheet" },
+    { "id": "raspberry-pi-pico", "title": "Pico-series Microcontrollers", "publisher": "Raspberry Pi", "url": "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html", "kind": "manufacturer-documentation" },
+    { "id": "platformio-esp32dev", "title": "Espressif 32 Platform", "publisher": "PlatformIO", "url": "https://docs.platformio.org/en/latest/platforms/espressif32.html", "kind": "toolchain-documentation" },
+    { "id": "platformio-uno", "title": "Arduino Uno PlatformIO Board", "publisher": "PlatformIO", "url": "https://docs.platformio.org/en/latest/boards/atmelavr/uno.html", "kind": "toolchain-documentation" },
+    { "id": "platformio-nano", "title": "Arduino Nano ATmega328 PlatformIO Board", "publisher": "PlatformIO", "url": "https://docs.platformio.org/en/latest/boards/atmelavr/nanoatmega328.html", "kind": "toolchain-documentation" },
+    { "id": "platformio-pico", "title": "Raspberry Pi Pico PlatformIO Board", "publisher": "PlatformIO", "url": "https://docs.platformio.org/en/latest/boards/raspberrypi/rpipico.html", "kind": "toolchain-documentation" },
+    { "id": "adafruit-photocell", "title": "Photocells", "publisher": "Adafruit Learning System", "url": "https://learn.adafruit.com/photocells?view=all", "kind": "trusted-beginner-reference" },
+    { "id": "arduino-built-in-examples", "title": "Arduino Built-in Examples", "publisher": "Arduino", "url": "https://docs.arduino.cc/built-in-examples", "kind": "manufacturer-documentation" },
+    { "id": "analog-devices-tmp36", "title": "TMP35/TMP36/TMP37 Datasheet", "publisher": "Analog Devices", "url": "https://www.analog.com/media/en/technical-documentation/data-sheets/tmp35_36_37.pdf", "kind": "manufacturer-datasheet" },
+    { "id": "towerpro-sg90", "title": "SG90 Digital Servo", "publisher": "Tower Pro", "url": "https://towerpro.com.tw/product/sg90-7/", "kind": "manufacturer-documentation" },
+    { "id": "sparkfun-hcsr04", "title": "HC-SR04 Ultrasonic Distance Sensor", "publisher": "SparkFun Electronics", "url": "https://www.sparkfun.com/ultrasonic-distance-sensor-hc-sr04.html", "kind": "supplier-datasheet" },
+    { "id": "sparkfun-dc-motors", "title": "Driving Motors with Arduino", "publisher": "SparkFun Electronics", "url": "https://learn.sparkfun.com/tutorials/driving-motors-with-arduino/introduction", "kind": "trusted-beginner-reference" },
+    { "id": "adafruit-dc-motors", "title": "Arduino Lesson 13: DC Motors", "publisher": "Adafruit Learning System", "url": "https://learn.adafruit.com/adafruit-arduino-lesson-13-dc-motors/transistors", "kind": "trusted-beginner-reference" }
+  ],
+  "components": [
+    {
+      "id": "esp32-devkit-v1", "name": "ESP32 DevKit v1", "aliases": ["esp32", "esp32 devkit", "esp32 dev kit", "esp32dev"], "category": "microcontroller", "tags": ["wifi", "bluetooth", "adc", "pwm", "usb-serial", "3.3v"],
+      "engineering": {
+        "logicVoltageV": 3.3, "platformioEnv": "esp32dev",
+        "verifiedPins": ["GPIO4", "GPIO13", "GPIO14", "GPIO16", "GPIO17", "GPIO18", "GPIO19", "GPIO21", "GPIO22", "GPIO23", "GPIO25", "GPIO26", "GPIO27", "GPIO32", "GPIO33", "GPIO34", "GPIO35", "GPIO36", "GPIO39"],
+        "adcPins": ["GPIO4", "GPIO13", "GPIO14", "GPIO25", "GPIO26", "GPIO27", "GPIO32", "GPIO33", "GPIO34", "GPIO35", "GPIO36", "GPIO39"],
+        "pwmPins": ["GPIO4", "GPIO13", "GPIO14", "GPIO16", "GPIO17", "GPIO18", "GPIO19", "GPIO21", "GPIO22", "GPIO23", "GPIO25", "GPIO26", "GPIO27", "GPIO32", "GPIO33"],
+        "inputOnlyPins": ["GPIO34", "GPIO35", "GPIO36", "GPIO39"], "cautionPins": ["GPIO5", "GPIO12", "GPIO15"], "excludedPins": ["GPIO6", "GPIO7", "GPIO8", "GPIO9", "GPIO10", "GPIO11"]
+      },
+      "facts": [
+        { "id": "esp32-logic-voltage", "statement": "ESP32 GPIO operates in the 3.3 V domain; use 3.3 V signals for direct GPIO input.", "beginnerExplanation": "Do not send a 5 V sensor signal straight into an ESP32 pin.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["espressif-esp32-datasheet"] },
+        { "id": "esp32-wireless", "statement": "ESP32 includes 2.4 GHz Wi-Fi and Bluetooth capabilities.", "beginnerExplanation": "The board can later communicate wirelessly without an extra radio module.", "safetyCritical": false, "roles": ["hardware"], "sourceIds": ["espressif-esp32-datasheet"] },
+        { "id": "esp32-gpio34", "statement": "GPIO34 is ADC1 channel 6 and is input-only with no internal pull-up or pull-down.", "beginnerExplanation": "GPIO34 is a verified analog input for the light sensor, but it cannot power anything and needs an external divider resistor.", "safetyCritical": true, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["espressif-esp32-datasheet", "espressif-esp32-gpio"] },
+        { "id": "esp32-platformio-target", "statement": "The generic ESP32 development-board PlatformIO environment uses board ID esp32dev.", "beginnerExplanation": "Bench compiles this board as esp32dev in PlatformIO.", "safetyCritical": false, "roles": ["firmware", "supervisor"], "sourceIds": ["platformio-esp32dev"] }
+      ]
+    },
+    {
+      "id": "arduino-uno-r3", "name": "Arduino Uno R3", "aliases": ["arduino uno", "uno", "uno r3"], "category": "microcontroller", "tags": ["adc", "pwm", "usb-serial", "5v", "beginner"],
+      "engineering": { "logicVoltageV": 5, "platformioEnv": "uno", "verifiedPins": ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "A0", "A1", "A2", "A3", "A4", "A5"], "adcPins": ["A0", "A1", "A2", "A3", "A4", "A5"], "pwmPins": ["D3", "D5", "D6", "D9", "D10", "D11"], "cautionPins": ["D0", "D1"] },
+      "facts": [
+        { "id": "uno-capabilities", "statement": "Arduino Uno R3 has 14 digital I/O pins, 6 PWM outputs, and 6 analog inputs.", "beginnerExplanation": "The Uno is easy to learn and has enough analog inputs for a light sensor.", "safetyCritical": false, "roles": ["hardware", "wiring"], "sourceIds": ["arduino-uno-r3"] },
+        { "id": "uno-logic-voltage", "statement": "Arduino Uno R3 operates with 5 V logic.", "beginnerExplanation": "Its pin voltage is different from the ESP32, so sensor wiring cannot always be copied between boards.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["arduino-uno-r3"] },
+        { "id": "uno-platformio-target", "statement": "The Arduino Uno PlatformIO board ID is uno.", "beginnerExplanation": "Bench uses the uno target when compiling Uno firmware.", "safetyCritical": false, "roles": ["firmware", "supervisor"], "sourceIds": ["platformio-uno"] }
+      ]
+    },
+    {
+      "id": "arduino-nano", "name": "Arduino Nano ATmega328", "aliases": ["arduino nano", "nano", "nano atmega328"], "category": "microcontroller", "tags": ["adc", "pwm", "usb-serial", "5v", "compact"],
+      "engineering": { "logicVoltageV": 5, "platformioEnv": "nanoatmega328", "verifiedPins": ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"], "adcPins": ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"], "pwmPins": ["D3", "D5", "D6", "D9", "D10", "D11"], "cautionPins": ["D0", "D1"] },
+      "facts": [
+        { "id": "nano-logic-voltage", "statement": "The classic Arduino Nano ATmega328 is a 5 V board with analog inputs and PWM-capable digital pins.", "beginnerExplanation": "The Nano is compact but uses the same 5 V logic family as the classic Uno.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["arduino-nano-datasheet"] },
+        { "id": "nano-platformio-target", "statement": "The Arduino Nano ATmega328 PlatformIO board ID is nanoatmega328.", "beginnerExplanation": "Bench selects the Nano-specific compiler target automatically.", "safetyCritical": false, "roles": ["firmware", "supervisor"], "sourceIds": ["platformio-nano"] }
+      ]
+    },
+    {
+      "id": "raspberry-pi-pico", "name": "Raspberry Pi Pico", "aliases": ["raspberry pi pico", "pico", "rp2040"], "category": "microcontroller", "tags": ["adc", "pwm", "usb", "3.3v"],
+      "engineering": { "logicVoltageV": 3.3, "platformioEnv": "rpipico", "verifiedPins": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7", "GP8", "GP9", "GP10", "GP11", "GP12", "GP13", "GP14", "GP15", "GP16", "GP17", "GP18", "GP19", "GP20", "GP21", "GP22", "GP26", "GP27", "GP28"], "adcPins": ["GP26", "GP27", "GP28"], "pwmPins": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7", "GP8", "GP9", "GP10", "GP11", "GP12", "GP13", "GP14", "GP15", "GP16", "GP17", "GP18", "GP19", "GP20", "GP21", "GP22", "GP26", "GP27", "GP28"] },
+      "facts": [
+        { "id": "pico-capabilities", "statement": "Raspberry Pi Pico provides 26 multifunction GPIO pins, including 3 exposed ADC inputs, plus PWM, I2C, SPI, and UART.", "beginnerExplanation": "The Pico can read a light sensor and control many common parts, but the base Pico has no built-in wireless radio.", "safetyCritical": false, "roles": ["hardware", "wiring"], "sourceIds": ["raspberry-pi-pico"] },
+        { "id": "pico-logic-voltage", "statement": "Raspberry Pi Pico GPIO uses 3.3 V logic.", "beginnerExplanation": "Keep signals connected to Pico GPIO at 3.3 V.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["raspberry-pi-pico"] },
+        { "id": "pico-platformio-target", "statement": "The Raspberry Pi Pico PlatformIO board ID is rpipico.", "beginnerExplanation": "Bench compiles the base Pico with the rpipico target.", "safetyCritical": false, "roles": ["firmware", "supervisor"], "sourceIds": ["platformio-pico"] }
+      ]
+    },
+    {
+      "id": "ldr-photoresistor", "name": "LDR photoresistor", "aliases": ["ldr", "photoresistor", "photocell", "light sensor", "light-dependent resistor"], "category": "sensor", "tags": ["analog", "light", "passive", "voltage-divider"],
+      "engineering": { "requiresAnalogDivider": true, "typicalDividerResistorOhms": 10000 },
+      "facts": [
+        { "id": "ldr-divider", "statement": "A photocell is read through an analog-input voltage divider; a 10 kilohm fixed resistor is a documented beginner starting value.", "beginnerExplanation": "The LDR and 10k resistor turn changing light into a safe voltage the board can measure.", "safetyCritical": true, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["adafruit-photocell"] },
+        { "id": "ldr-rail-selection", "statement": "Power the divider from the board voltage that matches the analog input maximum.", "beginnerExplanation": "For an ESP32, build the divider from 3.3 V, not 5 V.", "safetyCritical": true, "roles": ["wiring", "supervisor"], "sourceIds": ["adafruit-photocell", "espressif-esp32-datasheet"] }
+      ]
+    },
+    {
+      "id": "hc-sr04", "name": "HC-SR04 ultrasonic sensor", "aliases": ["hc-sr04", "hcsr04", "ultrasonic", "distance sensor"], "category": "sensor", "tags": ["distance", "digital-pulse", "5v"],
+      "engineering": { "supplyVoltageV": { "min": 5, "max": 5, "nominal": 5 }, "signalVoltageMaxV": 5 },
+      "facts": [
+        { "id": "hcsr04-electrical", "statement": "The common HC-SR04 module uses a 5 V supply, about 15 mA operating current, and separate Trig and Echo pins.", "beginnerExplanation": "Power this module from 5 V, but check the Echo signal before connecting it to a 3.3 V board.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["sparkfun-hcsr04"] },
+        { "id": "hcsr04-esp32-divider", "statement": "A 5 V Echo signal requires level reduction before entering 3.3 V-only GPIO.", "beginnerExplanation": "Bench adds a voltage divider on Echo to protect an ESP32 or Pico input.", "safetyCritical": true, "roles": ["wiring", "supervisor"], "sourceIds": ["sparkfun-hcsr04", "espressif-esp32-datasheet"] }
+      ]
+    },
+    {
+      "id": "push-button", "name": "Momentary push button", "aliases": ["push button", "pushbutton", "button", "switch"], "category": "sensor", "tags": ["digital-input", "pullup", "debounce"], "engineering": {},
+      "facts": [{ "id": "button-input", "statement": "A push button needs a defined pull-up or pull-down state and may need software debounce.", "beginnerExplanation": "The resistor or built-in pull-up stops the input from randomly changing when the button is released.", "safetyCritical": false, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "potentiometer-10k", "name": "10k potentiometer", "aliases": ["potentiometer", "pot", "knob"], "category": "sensor", "tags": ["analog", "voltage-divider"], "engineering": {},
+      "facts": [{ "id": "potentiometer-divider", "statement": "A three-terminal potentiometer forms a voltage divider with its wiper connected to an analog input.", "beginnerExplanation": "Connect the outer legs to power and ground, then read the middle leg.", "safetyCritical": true, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "tmp36", "name": "TMP36 temperature sensor", "aliases": ["tmp36", "temperature sensor", "analog temperature"], "category": "sensor", "tags": ["analog", "temperature"],
+      "engineering": { "supplyVoltageV": { "min": 2.7, "max": 5.5, "nominal": 3.3 }, "signalVoltageMaxV": 2 },
+      "facts": [{ "id": "tmp36-electrical", "statement": "TMP36 operates from 2.7 V to 5.5 V and produces an analog output with a 10 mV per degree Celsius scale factor.", "beginnerExplanation": "It can run safely from 3.3 V and its middle output pin goes to an analog input.", "safetyCritical": true, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["analog-devices-tmp36"] }]
+    },
+    {
+      "id": "pir-sensor", "name": "PIR motion sensor module", "aliases": ["pir", "motion sensor", "pir sensor"], "category": "sensor", "tags": ["digital-input", "motion", "module-dependent"], "engineering": {},
+      "facts": [{ "id": "pir-module-variant", "statement": "PIR module voltage and output details vary by module, so the exact module datasheet must be checked before wiring.", "beginnerExplanation": "Use the model number printed on the module; Bench will not guess its voltage.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "led", "name": "LED", "aliases": ["led", "light emitting diode"], "category": "actuator", "tags": ["digital-output", "pwm", "polarized"], "engineering": { "requiresSeriesResistor": true },
+      "facts": [{ "id": "led-series-resistor", "statement": "An external LED requires a current-limiting series resistor and correct polarity.", "beginnerExplanation": "Put a resistor in series so the LED and board pin are not overloaded.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "buzzer", "name": "Buzzer", "aliases": ["buzzer", "piezo", "speaker"], "category": "actuator", "tags": ["digital-output", "pwm", "module-dependent"], "engineering": {},
+      "facts": [{ "id": "buzzer-variant", "statement": "Active and passive buzzers use different drive methods, and current requirements vary by part.", "beginnerExplanation": "Check whether the part says active or passive before choosing code and wiring.", "safetyCritical": true, "roles": ["hardware", "wiring", "firmware", "supervisor"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "sg90-servo", "name": "Tower Pro SG90 servo", "aliases": ["sg90", "servo", "micro servo"], "category": "actuator", "tags": ["pwm", "4.8v", "external-power"], "engineering": { "supplyVoltageV": { "min": 4.8, "max": 4.8, "nominal": 4.8 }, "requiresExternalPower": true },
+      "facts": [{ "id": "sg90-power", "statement": "Tower Pro specifies 4.8 V operating voltage for the SG90 digital servo.", "beginnerExplanation": "Power the servo from a suitable supply and join its ground to the microcontroller ground.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["towerpro-sg90"] }]
+    },
+    {
+      "id": "dc-motor", "name": "Small DC motor", "aliases": ["dc motor", "motor", "fan"], "category": "actuator", "tags": ["external-power", "driver", "flyback-diode"], "engineering": { "requiresDriver": true, "requiresFlybackDiode": true, "requiresExternalPower": true },
+      "facts": [
+        { "id": "motor-driver", "statement": "A small DC motor draws more current than a microcontroller GPIO can safely supply and must use a transistor or motor driver.", "beginnerExplanation": "Never connect a motor directly to a GPIO pin; use a driver stage and separate motor power.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["sparkfun-dc-motors"] },
+        { "id": "motor-flyback", "statement": "An inductive DC motor needs flyback protection unless the selected driver module already includes it.", "beginnerExplanation": "A diode or protected driver absorbs the voltage spike when the motor stops.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["adafruit-dc-motors"] }
+      ]
+    },
+    {
+      "id": "resistor", "name": "Fixed resistor", "aliases": ["resistor", "10k resistor", "220 ohm resistor", "1k resistor"], "category": "supporting", "tags": ["current-limit", "pullup", "pulldown", "voltage-divider"], "engineering": {},
+      "facts": [{ "id": "resistor-purpose", "statement": "Fixed resistors are used for current limiting, pull-up or pull-down states, and voltage dividers.", "beginnerExplanation": "The resistor value and its exact position are part of the circuit, not optional decoration.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["arduino-built-in-examples", "adafruit-photocell"] }]
+    },
+    {
+      "id": "voltage-divider", "name": "Voltage divider", "aliases": ["voltage divider", "divider", "level divider"], "category": "supporting", "tags": ["analog", "level-reduction", "resistors"], "engineering": {},
+      "facts": [{ "id": "divider-purpose", "statement": "A voltage divider creates a measurable midpoint voltage and can reduce a higher signal voltage for a high-impedance input.", "beginnerExplanation": "Two resistive parts can turn a changing resistance or a higher signal into a safe input voltage.", "safetyCritical": true, "roles": ["hardware", "wiring", "supervisor"], "sourceIds": ["adafruit-photocell"] }]
+    },
+    {
+      "id": "breadboard", "name": "Solderless breadboard", "aliases": ["breadboard", "solderless breadboard"], "category": "supporting", "tags": ["prototype"], "engineering": {},
+      "facts": [{ "id": "breadboard-layout", "statement": "Breadboard power rails and terminal strips must be connected according to the board's internal row layout.", "beginnerExplanation": "Rows are connected internally, but the center gap and split power rails are not automatically joined.", "safetyCritical": false, "roles": ["wiring"], "sourceIds": ["arduino-built-in-examples"] }]
+    },
+    {
+      "id": "jumper-wires", "name": "Jumper wires", "aliases": ["jumper wire", "jumper wires", "wire", "wires"], "category": "supporting", "tags": ["prototype"], "engineering": {},
+      "facts": [{ "id": "wire-colors", "statement": "Consistent wire colors make beginner circuits easier to inspect: red for power, black for ground, and another color for signals.", "beginnerExplanation": "Color coding helps you catch wiring mistakes before power-up.", "safetyCritical": false, "roles": ["wiring"], "sourceIds": ["arduino-built-in-examples"] }]
+    }
+  ]
+}

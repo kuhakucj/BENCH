@@ -1,0 +1,11 @@
+.next
+node_modules
+.env
+.env.local
+out
+dist
+workspaces
+generated
+tsconfig.tsbuildinfo
+AGENTS.md
+CLAUDE.md
