@@ -1,0 +1,35 @@
+{
+  "version": "0.1",
+  "type": "container",
+  "meta": {
+    "trigger": "api",
+    "system_resources": {
+      "required_vram": 20
+    }
+  },
+  "ops": [
+    {
+      "type": "container/run",
+      "id": "qwen3-vllm",
+      "args": {
+        "image": "docker.io/vllm/vllm-openai:v0.10.2",
+        "entrypoint": [
+          "/bin/sh"
+        ],
+        "cmd": [
+          "-c",
+          "MODEL_CONFIG=$(find /models/qwen3-8b -type f -name config.json -print -quit); test -n \"$MODEL_CONFIG\" || { echo 'Qwen config.json not found under /models/qwen3-8b' >&2; find /models/qwen3-8b -maxdepth 4 -type f | head -100 >&2; exit 1; }; MODEL_DIR=$(dirname \"$MODEL_CONFIG\"); echo \"Starting Qwen from $MODEL_DIR\"; exec python3 -m vllm.entrypoints.openai.api_server --model \"$MODEL_DIR\" --served-model-name Qwen/Qwen3-8B --host 0.0.0.0 --port 8000 --dtype auto --max-model-len 4096 --gpu-memory-utilization 0.90 --reasoning-parser qwen3"
+        ],
+        "gpu": true,
+        "resources": [
+          {
+            "type": "HF",
+            "repo": "Qwen/Qwen3-8B",
+            "target": "/models/qwen3-8b"
+          }
+        ],
+        "expose": 8000
+      }
+    }
+  ]
+}

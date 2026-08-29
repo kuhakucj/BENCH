@@ -1,0 +1,35 @@
+{
+  "name": "physical-computing-agent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "nosana:check": "node scripts/nosana.mjs check",
+    "nosana:create": "node scripts/nosana.mjs create",
+    "nosana:update": "node scripts/nosana.mjs update",
+    "nosana:start": "node scripts/nosana.mjs start",
+    "nosana:deploy": "node scripts/nosana.mjs deploy",
+    "nosana:status": "node scripts/nosana.mjs status",
+    "nosana:stop": "node scripts/nosana.mjs stop"
+  },
+  "dependencies": {
+    "@daytona/sdk": "latest",
+    "@nosana/kit": "^2.9.0",
+    "dotenv": "^17.4.2",
+    "next": "16.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.0",
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.7",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@11.19.0"
+}

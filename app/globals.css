@@ -1,0 +1,61 @@
+:root {
+  --bg: #0a0a0b;
+  --panel: #151517;
+  --line: #2a2a2d;
+  --text: #f4f4f2;
+  --muted: #a8a8ac;
+  --dim: #6e6e72;
+  --accent: #ccff00;
+  --orange: #ff9f43;
+  --danger: #ff5c7a;
+  --ok: #58e78a;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+button, textarea { font: inherit; }
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,.025) 1px, transparent 1px), var(--bg); background-size: 48px 48px; }
+.topbar { height: 56px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 16px; padding: 0 16px; }
+.logo { width: 30px; height: 30px; background: var(--accent); color: var(--bg); display: grid; place-items: center; font-weight: 900; }
+.brand { font-weight: 800; letter-spacing: 2px; }
+.mono { font-family: Consolas, "IBM Plex Mono", monospace; }
+.status-pill { border: 1px solid var(--line); color: var(--muted); padding: 7px 10px; font-size: 12px; display: inline-flex; gap: 8px; align-items: center; }
+.dot { width: 8px; height: 8px; display: inline-block; background: var(--accent); }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 360px; min-height: calc(100vh - 56px); }
+.sidebar, .rightbar { border-right: 1px solid var(--line); padding: 18px 16px; }
+.rightbar { border-right: 0; border-left: 1px solid var(--line); }
+.section-label { font-size: 11px; color: var(--dim); letter-spacing: 1.5px; margin: 0 0 12px; }
+.agent { border-left: 2px solid transparent; padding: 10px 0 10px 12px; }
+.agent.active { background: var(--panel); border-left-color: var(--accent); }
+.agent-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.agent-name { font-size: 12px; letter-spacing: 1px; font-weight: 700; }
+.agent-detail { color: var(--dim); font-size: 11px; margin-top: 4px; }
+.main { padding: 22px; overflow: auto; }
+.idea-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: stretch; }
+.idea-input { min-height: 82px; resize: vertical; border: 1px solid var(--line); background: #101012; color: var(--text); padding: 14px; outline: none; }
+.run-button { min-width: 150px; border: 0; background: var(--accent); color: var(--bg); font-weight: 900; letter-spacing: 1px; cursor: pointer; }
+.run-button:disabled { cursor: wait; opacity: .65; }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 18px 0; }
+.step { border: 1px solid var(--line); padding: 10px; min-height: 58px; background: rgba(21,21,23,.72); }
+.step strong { display: block; font-size: 12px; letter-spacing: .5px; }
+.step span { color: var(--dim); font-size: 11px; }
+.content-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; }
+.panel { border: 1px solid var(--line); background: rgba(15,15,17,.92); padding: 16px; }
+.panel h2, .panel h3 { margin: 0 0 12px; font-size: 16px; letter-spacing: .5px; }
+.list { display: grid; gap: 8px; }
+.item { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #232325; padding-bottom: 8px; font-size: 13px; }
+.item small { color: var(--muted); }
+.activity { display: grid; gap: 10px; }
+.event { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; color: var(--muted); font-size: 12px; }
+.event.ok .dot { background: var(--ok); }
+.event.error .dot { background: var(--danger); }
+.event.running .dot { background: var(--accent); }
+.svg-wrap { background: #f8f7f3; color: #111; overflow: auto; border: 1px solid var(--line); }
+.code { white-space: pre-wrap; overflow: auto; max-height: 320px; border: 1px solid var(--line); padding: 12px; background: #09090a; color: #d8f7dc; font-size: 12px; }
+.warning { color: var(--orange); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar, .rightbar { border: 0; border-bottom: 1px solid var(--line); }
+  .steps, .content-grid, .idea-form { grid-template-columns: 1fr; }
+  .run-button { min-height: 48px; }
+}

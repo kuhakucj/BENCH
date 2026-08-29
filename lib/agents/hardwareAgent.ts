@@ -1,0 +1,14 @@
+import { createModelClient } from "@/lib/nosana/client";
+import { HardwareSchema } from "@/lib/schemas/projectSpec";
+import { hardwarePrompt } from "./prompts";
+import { fallbackHardware } from "./fallbacks";
+import { completeStructured } from "./structuredOutput";
+
+export async function hardwareAgent(idea: string) {
+  const model = createModelClient();
+  const output = await completeStructured(model, HardwareSchema, [
+    { role: "system", content: hardwarePrompt },
+    { role: "user", content: idea }
+  ], fallbackHardware);
+  return { output, provider: model.provider };
+}
