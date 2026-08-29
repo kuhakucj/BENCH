@@ -1,0 +1,380 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #0A0A0B; }
+    a { color: #CCFF00; } a:hover { color: #F4F4F2; }
+    ::selection { background: #CCFF00; color: #0A0A0B; }
+  </style>
+</helmet>
+<div style="--accent: {{accent}}; width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0A0A0B; color: #F4F4F2; font-family: 'Space Grotesk', Arial, sans-serif; overflow: hidden;">
+
+  <!-- ============ TOP BAR ============ -->
+  <div style="display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 16px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 28px; height: 28px; background: var(--accent); display: flex; align-items: center; justify-content: center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2"><rect x="7" y="7" width="10" height="10"></rect><path d="M9 7V4M15 7V4M9 20v-3M15 20v-3M7 9H4M7 15H4M20 9h-3M20 15h-3"></path></svg>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-weight: 700; font-size: 16px; letter-spacing: 2px;">BENCH</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">v0.1</span>
+      </div>
+    </div>
+    <div style="width: 1px; height: 20px; background: #232325;"></div>
+    <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: #A8A8AC;">smart-plant-monitor/</span>
+    <div style="display: flex; align-items: center; gap: 7px; height: 24px; padding: 0 9px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 0.5px; color: #A8A8AC;">
+      <span style="width: 6px; height: 6px; background: var(--accent);"></span>
+      <span style="color: #F4F4F2;">1</span> RUNNING
+      <span style="color: #38383C;">/</span>
+      <span style="color: #F4F4F2;">4</span> DONE
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">
+      <span style="width: 7px; height: 7px; background: var(--accent); border-radius: 50%;"></span>
+      <span style="color: #F4F4F2;">Prusa MK4</span>
+      <span>ready · PETG</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border: 1px solid #2A2A2D; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #F4F4F2;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        STL
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 16px; background: var(--accent); color: #0A0A0B; font-size: 12px; font-weight: 700; letter-spacing: 1px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2.4"><path d="M12 2 3 7v10l9 5 9-5V7z"></path><path d="M3 7l9 5 9-5"></path></svg>
+        SEND TO PRINTER
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid #2A2A2D;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A8AC" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"></path></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BODY ============ -->
+  <div style="display: flex; flex-grow: 1; min-height: 0;">
+
+    <!-- LEFT SIDEBAR -->
+    <div style="width: 248px; flex-shrink: 0; border-right: 1px solid #232325; display: flex; flex-direction: column; gap: 22px; padding: 18px 0; overflow: hidden;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="display: flex; align-items: center; padding: 0 16px 10px 16px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">AGENTS</span>
+          <div style="flex-grow: 1;"></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: var(--accent); flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">BENCH</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">LEAD</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">orchestrating · 1 task</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">WIRE</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">DONE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">pin map v4 · 14 nets</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">BOARD</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">DONE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">rev B routed · 0 errors</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">PARTS</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">DONE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">bom v3 · MCP1700</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">FIRM</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">DONE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">v13 flashed · 15:02</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; background: #151517; border-left: 2px solid var(--accent);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: var(--accent); flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2; font-weight: 600;">SHELL</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: var(--accent);">RUN</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">enclosure draft 1</span>
+        </div>
+      </div>
+
+      <!-- SHELL scoped parts list -->
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72; padding: 0 16px 8px 16px;">BODIES · 3</div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #151517;">
+          <span style="width: 8px; height: 8px; background: var(--accent); flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #F4F4F2;">body.step</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">28 g</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 16px;">
+          <span style="width: 8px; height: 8px; background: #3A3A3E; flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">lid.step</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">11 g</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 16px;">
+          <span style="width: 8px; height: 8px; background: #3A3A3E; flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">clip.step</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">3 g</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 16px;">
+          <span style="width: 8px; height: 8px; border: 1px solid #38383C; box-sizing: border-box; flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #56565A;">pcb (reference)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER — 3D VIEW -->
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 12px 24px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #6E6E72;">TEAM</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3A3A3E" stroke-width="3"><polyline points="9 5 16 12 9 19"></polyline></svg>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">SHELL</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #6E6E72;">case/planter.step</span>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="display: flex; align-items: center; height: 26px; padding: 0 11px; border: 1px solid var(--accent); font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #F4F4F2;">EXPLODED</div>
+          <div style="display: flex; align-items: center; height: 26px; padding: 0 11px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #A8A8AC;">ASSEMBLED</div>
+          <div style="display: flex; align-items: center; height: 26px; padding: 0 11px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #A8A8AC;">SECTION</div>
+        </div>
+      </div>
+
+      <div style="flex-grow: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 12px 24px;">
+        <svg width="100%" viewBox="0 0 720 470" fill="none" style="display: block; max-height: 100%;">
+
+          <!-- explode guides -->
+          <path d="M300 50 V150" stroke="#2A2A2D" stroke-width="1" stroke-dasharray="3 5"></path>
+          <path d="M369.3 290 V380" stroke="#2A2A2D" stroke-width="1" stroke-dasharray="3 5"></path>
+
+          <!-- ================= BODY ================= -->
+          <polygon points="300,140 542.5,280 369.3,380 126.8,240" fill="#1E1E21" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <polygon points="300,140 542.5,280 542.5,340 300,200" fill="#17171A" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <polygon points="542.5,280 369.3,380 369.3,440 542.5,340" fill="#121215" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <!-- cavity -->
+          <polygon points="300,150 525.2,280 369.3,370 144,240" fill="#0C0C0E"></polygon>
+          <polygon points="300,150 144,240 144,290 300,200" fill="#141417"></polygon>
+          <polygon points="144,240 369.3,370 369.3,420 144,290" fill="#101013"></polygon>
+          <polygon points="300,200 525.2,330 369.3,420 144,290" fill="#0B0B0D" stroke="#1E1E21"></polygon>
+
+          <!-- mounting bosses -->
+          <path d="M292 195 v30 a8 4.5 0 0 0 16 0 v-30" fill="#161619" stroke="#3A3A3E"></path>
+          <ellipse cx="300" cy="195" rx="8" ry="4.5" fill="#1A1A1D" stroke="var(--accent)" stroke-width="1.2"></ellipse>
+          <path d="M473.9 300 v30 a8 4.5 0 0 0 16 0 v-30" fill="#161619" stroke="#3A3A3E"></path>
+          <ellipse cx="481.9" cy="300" rx="8" ry="4.5" fill="#1A1A1D" stroke="var(--accent)" stroke-width="1.2"></ellipse>
+          <path d="M361.3 365 v30 a8 4.5 0 0 0 16 0 v-30" fill="#161619" stroke="#3A3A3E"></path>
+          <ellipse cx="369.3" cy="365" rx="8" ry="4.5" fill="#1A1A1D" stroke="var(--accent)" stroke-width="1.2"></ellipse>
+          <path d="M179.4 260 v30 a8 4.5 0 0 0 16 0 v-30" fill="#161619" stroke="#3A3A3E"></path>
+          <ellipse cx="187.4" cy="260" rx="8" ry="4.5" fill="#1A1A1D" stroke="var(--accent)" stroke-width="1.2"></ellipse>
+
+          <!-- USB-C cutout (checked against BOARD) -->
+          <polygon points="334.6,175 386.6,205 386.6,230 334.6,200" fill="#0A0A0B" stroke="var(--accent)" stroke-width="1.5"></polygon>
+          <!-- probe cable cutout -->
+          <polygon points="481.9,330 429.9,360 429.9,385 481.9,355" fill="#0A0A0B" stroke="#6E6E72" stroke-width="1.5"></polygon>
+
+          <!-- ================= PCB (floats above the open body) ================= -->
+          <polygon points="300,117 507.8,237 369.3,317 161.4,197" fill="#141416" stroke="var(--accent)" stroke-width="1.5"></polygon>
+          <polygon points="300,117 507.8,237 507.8,245 300,125" fill="#0F0F11" stroke="var(--accent)" stroke-width="1"></polygon>
+          <polygon points="507.8,237 369.3,317 369.3,325 507.8,245" fill="#0C0C0E" stroke="var(--accent)" stroke-width="1"></polygon>
+          <!-- module on pcb -->
+          <polygon points="317.3,142 421.2,202 352,242 248,182" fill="#1E1E21" stroke="#4A4A4E"></polygon>
+          <polygon points="317.3,142 421.2,202 421.2,217 317.3,157" fill="#161619" stroke="#4A4A4E"></polygon>
+          <polygon points="421.2,202 352,242 352,257 421.2,217" fill="#111114" stroke="#4A4A4E"></polygon>
+
+          <!-- ================= LID (nearest the viewer) ================= -->
+          <polygon points="300,25 542.5,165 369.3,265 126.8,125" fill="#1E1E21" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <polygon points="300,25 542.5,165 542.5,190 300,50" fill="#17171A" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <polygon points="542.5,165 369.3,265 369.3,290 542.5,190" fill="#121215" stroke="#4A4A4E" stroke-width="1.5"></polygon>
+          <!-- vent slots on lid -->
+          <path d="M310 74 L370 108 M322 67 L382 101 M334 60 L394 94" stroke="#0A0A0B" stroke-width="4"></path>
+
+          <!-- leaders + labels -->
+          <path d="M542.5 177 H584" stroke="#3A3A3E" stroke-width="1"></path>
+          <text x="590" y="174" fill="#F4F4F2" font-family="IBM Plex Mono, Menlo, monospace" font-size="10" letter-spacing="1">LID</text>
+          <text x="590" y="188" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">2 mm · snap fit</text>
+
+          <path d="M507.8 241 H584" stroke="var(--accent)" stroke-width="1"></path>
+          <text x="590" y="238" fill="var(--accent)" font-family="IBM Plex Mono, Menlo, monospace" font-size="10" letter-spacing="1">PCB REV B</text>
+          <text x="590" y="252" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">from BOARD</text>
+
+          <path d="M542.5 312 H584" stroke="#3A3A3E" stroke-width="1"></path>
+          <text x="590" y="309" fill="#F4F4F2" font-family="IBM Plex Mono, Menlo, monospace" font-size="10" letter-spacing="1">BODY</text>
+          <text x="590" y="323" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">4 × M2.5 boss</text>
+
+          <path d="M334.6 213 H250 V232" stroke="var(--accent)" stroke-width="1"></path>
+          <text x="246" y="210" text-anchor="end" fill="var(--accent)" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">USB-C · aligned to J1</text>
+
+          <text x="335" y="460" text-anchor="middle" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="10" letter-spacing="1">56.0 × 40.0 × 18.0 mm</text>
+        </svg>
+
+        <div style="position: absolute; right: 24px; bottom: 14px; display: flex; align-items: center; gap: 6px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 14px;">−</div>
+          <div style="display: flex; align-items: center; justify-content: center; height: 28px; padding: 0 10px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">ISO</div>
+          <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 14px;">+</div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid #232325; padding: 12px 24px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; padding: 4px 8px; border: 1px solid #2A2A2D; color: #F4F4F2;">@SHELL</span>
+        <div style="flex-grow: 1; display: flex; align-items: center; gap: 10px; height: 42px; border: 1px solid #2A2A2D; background: #121214; padding: 0 6px 0 14px;">
+          <span style="flex-grow: 1; font-size: 13.5px; color: #6E6E72;">Make the lid screw down instead of snapping…</span>
+          <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--accent);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2.2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — FIT CHECK + PARAMETERS -->
+    <div style="width: 360px; flex-shrink: 0; border-left: 1px solid #232325; display: flex; flex-direction: column; overflow: hidden;">
+
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">CONTEXT</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; padding: 2px 6px; border: 1px solid var(--accent); color: var(--accent);">SHELL</span>
+        <div style="flex-grow: 1;"></div>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">draft 1</span>
+      </div>
+
+      <div style="display: flex; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #F4F4F2; border-bottom: 2px solid var(--accent);">FIT</div>
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #6E6E72; border-bottom: 2px solid transparent;">PARAMS</div>
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #6E6E72; border-bottom: 2px solid transparent;">PRINT</div>
+      </div>
+
+      <!-- source of truth -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #232325; background: #0E0E10; flex-shrink: 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink: 0;"><path d="M4 12a8 8 0 0 1 13-6.2M20 12a8 8 0 0 1-13 6.2"></path><polyline points="17 3 17 6.5 13.5 6.5"></polyline><polyline points="7 21 7 17.5 10.5 17.5"></polyline></svg>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #F4F4F2;">outline.step from BOARD</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">rev B · synced 2 min ago</span>
+        </div>
+      </div>
+
+      <!-- fit checks -->
+      <div style="display: flex; flex-direction: column; padding: 4px 0; flex-shrink: 0;">
+        <div style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 20px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2.4" style="flex-shrink: 0; margin-top: 1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 13px; color: #D8D8DA;">Board clears the lid by 1.4 mm</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #56565A;">tallest part: U1 module, 3.1 mm</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 20px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2.4" style="flex-shrink: 0; margin-top: 1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 13px; color: #D8D8DA;">USB-C cutout matches J1</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #56565A;">X 12.0 mm · 0.2 mm clearance</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 20px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2.4" style="flex-shrink: 0; margin-top: 1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 13px; color: #D8D8DA;">4 bosses match the M2.5 holes</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #56565A;">42 × 26 mm hole pattern</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 11px; padding: 11px 20px; background: #141416;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 3 2 20h20z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 13px; color: #F4F4F2;">Probe cutout sits 1.2 mm from J2</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; line-height: 1.45; color: #6E6E72;">Tight for a 3 mm cable boot.<br>Widen the slot, or ask BOARD to shift J2.</span>
+            <div style="display: flex; gap: 8px; padding-top: 5px;">
+              <div style="display: flex; align-items: center; height: 28px; padding: 0 12px; background: var(--accent); color: #0A0A0B; font-size: 11px; font-weight: 700; letter-spacing: 1px;">WIDEN SLOT</div>
+              <div style="display: flex; align-items: center; height: 28px; padding: 0 12px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 11px; font-weight: 600; letter-spacing: 1px;">ASK BOARD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- parameters -->
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border-top: 1px solid #232325; flex-grow: 1; min-height: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">PARAMETERS</span>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="flex-grow: 1; font-size: 12.5px; color: #A8A8AC;">Wall thickness</span>
+          <div style="display: flex; align-items: center; border: 1px solid #2A2A2D;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">−</span>
+            <span style="width: 52px; text-align: center; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px; color: #F4F4F2;">2.0 mm</span>
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">+</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="flex-grow: 1; font-size: 12.5px; color: #A8A8AC;">Fit tolerance</span>
+          <div style="display: flex; align-items: center; border: 1px solid #2A2A2D;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">−</span>
+            <span style="width: 52px; text-align: center; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px; color: #F4F4F2;">0.2 mm</span>
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">+</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="flex-grow: 1; font-size: 12.5px; color: #A8A8AC;">Corner radius</span>
+          <div style="display: flex; align-items: center; border: 1px solid #2A2A2D;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">−</span>
+            <span style="width: 52px; text-align: center; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px; color: #F4F4F2;">3.0 mm</span>
+            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 26px; color: #6E6E72; font-size: 13px;">+</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="flex-grow: 1; font-size: 12.5px; color: #A8A8AC;">Planter clip</span>
+          <div style="display: flex; align-items: center; gap: 0;">
+            <span style="display: flex; align-items: center; height: 26px; padding: 0 11px; background: var(--accent); color: #0A0A0B; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; font-weight: 700;">ON</span>
+            <span style="display: flex; align-items: center; height: 26px; padding: 0 11px; border: 1px solid #2A2A2D; color: #6E6E72; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px;">OFF</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #232325; flex-shrink: 0;">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-right: 1px solid #232325;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">MATERIAL</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">PETG</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-right: 1px solid #232325;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">PRINT TIME</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">3<span style="font-size: 10px; color: #6E6E72;">h </span>40<span style="font-size: 10px; color: #6E6E72;">m</span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">SUPPORTS</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">NONE</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#CCFF00","options":["#CCFF00","#FF4D00","#00E5FF"],"section":"Theme"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#CCFF00' };
+  }
+}
+</script>
+</body>
+</html>

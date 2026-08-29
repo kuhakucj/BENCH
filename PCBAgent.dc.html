@@ -1,0 +1,419 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; background: #0A0A0B; }
+    a { color: #CCFF00; } a:hover { color: #F4F4F2; }
+    ::selection { background: #CCFF00; color: #0A0A0B; }
+  </style>
+</helmet>
+<div style="--accent: {{accent}}; width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0A0A0B; color: #F4F4F2; font-family: 'Space Grotesk', Arial, sans-serif; overflow: hidden;">
+
+  <!-- ============ TOP BAR ============ -->
+  <div style="display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 16px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 28px; height: 28px; background: var(--accent); display: flex; align-items: center; justify-content: center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2"><rect x="7" y="7" width="10" height="10"></rect><path d="M9 7V4M15 7V4M9 20v-3M15 20v-3M7 9H4M7 15H4M20 9h-3M20 15h-3"></path></svg>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-weight: 700; font-size: 16px; letter-spacing: 2px;">BENCH</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">v0.1</span>
+      </div>
+    </div>
+    <div style="width: 1px; height: 20px; background: #232325;"></div>
+    <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: #A8A8AC;">smart-plant-monitor/</span>
+    <div style="display: flex; align-items: center; gap: 7px; height: 24px; padding: 0 9px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 0.5px; color: #A8A8AC;">
+      <span style="width: 6px; height: 6px; background: var(--accent);"></span>
+      <span style="color: #F4F4F2;">2</span> RUNNING
+      <span style="color: #38383C;">/</span>
+      <span style="color: #F4F4F2;">1</span> NEEDS YOU
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">
+      <span style="width: 7px; height: 7px; background: var(--accent); border-radius: 50%;"></span>
+      <span style="color: #F4F4F2;">ESP32-S3</span>
+      <span>/dev/cu.usbmodem14201</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border: 1px solid #2A2A2D; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #F4F4F2;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        GERBERS
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 16px; background: var(--accent); color: #0A0A0B; font-size: 12px; font-weight: 700; letter-spacing: 1px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#0A0A0B" stroke="none"><polygon points="13 2 3 14 11 14 10 22 21 9 13 9"></polygon></svg>
+        FLASH
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid #2A2A2D;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A8AC" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"></path></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BODY ============ -->
+  <div style="display: flex; flex-grow: 1; min-height: 0;">
+
+    <!-- LEFT SIDEBAR -->
+    <div style="width: 248px; flex-shrink: 0; border-right: 1px solid #232325; display: flex; flex-direction: column; gap: 22px; padding: 18px 0; overflow: hidden;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="display: flex; align-items: center; padding: 0 16px 10px 16px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">AGENTS</span>
+          <div style="flex-grow: 1;"></div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: var(--accent); flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">BENCH</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">LEAD</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">orchestrating · 5 tasks</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">WIRE</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">DONE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">pin map v4 · 14 nets</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; background: #151517; border-left: 2px solid var(--accent);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: var(--accent); flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2; font-weight: 600;">BOARD</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: var(--accent);">RUN</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">routing rev B · 81%</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: var(--accent); flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">PARTS</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; padding: 2px 5px; background: var(--accent); color: #0A0A0B; font-weight: 600;">YOU</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">1 substitution to approve</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; background: #3A3A3E; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">FIRM</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">QUEUE</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">pin remap · after BOARD</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 16px; border-left: 2px solid transparent;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 7px; height: 7px; border: 1px solid #56565A; box-sizing: border-box; flex-shrink: 0;"></span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #A8A8AC;">SHELL</span>
+            <div style="flex-grow: 1;"></div>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 0.5px; color: #6E6E72;">BLOCK</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72; padding-left: 15px;">needs board outline</span>
+        </div>
+      </div>
+
+      <!-- BOARD agent scoped nets -->
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72; padding: 0 16px 8px 16px;">NETS · 14</div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 28px; padding: 0 16px;">
+          <span style="width: 10px; height: 2px; background: var(--accent); flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #F4F4F2;">SOIL_AOUT</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 28px; padding: 0 16px;">
+          <span style="width: 10px; height: 2px; background: var(--accent); flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">+3V3</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 28px; padding: 0 16px;">
+          <span style="width: 10px; height: 2px; background: var(--accent); flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">VBUS</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 28px; padding: 0 16px;">
+          <span style="width: 10px; height: 2px; background: #56565A; flex-shrink: 0;"></span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">GND</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 28px; padding: 0 16px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #56565A; padding-left: 20px;">+ 10 more</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER — BOARD CANVAS -->
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+
+      <!-- breadcrumb + layer toolbar -->
+      <div style="display: flex; align-items: center; gap: 14px; padding: 12px 24px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #6E6E72;">TEAM</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3A3A3E" stroke-width="3"><polyline points="9 5 16 12 9 19"></polyline></svg>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #F4F4F2;">BOARD</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #6E6E72;">pcb/rev-b.kicad</span>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border: 1px solid var(--accent); font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #F4F4F2;">
+            <span style="width: 8px; height: 8px; background: var(--accent);"></span>TOP
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #A8A8AC;">
+            <span style="width: 8px; height: 8px; background: #56565A;"></span>BOTTOM
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #A8A8AC;">
+            <span style="width: 8px; height: 8px; background: #F4F4F2;"></span>SILK
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; color: #6E6E72;">
+            <span style="width: 8px; height: 8px; border: 1px solid #4A4A4E; box-sizing: border-box;"></span>POUR
+          </div>
+        </div>
+      </div>
+
+      <!-- board canvas -->
+      <div style="flex-grow: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 18px 24px;">
+        <svg width="100%" viewBox="0 0 680 500" fill="none" style="display: block; max-height: 100%;">
+          <defs>
+            <pattern id="pour" width="9" height="9" patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="1" fill="#1D1D20"></circle>
+            </pattern>
+          </defs>
+
+          <!-- board -->
+          <rect x="30" y="30" width="600" height="400" rx="10" fill="#0F0F11" stroke="#4A4A4E" stroke-width="2"></rect>
+          <rect x="30" y="30" width="600" height="400" rx="10" fill="url(#pour)"></rect>
+
+          <!-- bottom-layer traces (drawn first, beneath) -->
+          <path d="M96 268 H150 V378 H560 V246" stroke="#56565A" stroke-width="3"></path>
+          <path d="M200 300 H330 V360" stroke="#56565A" stroke-width="3"></path>
+
+          <!-- top-layer traces -->
+          <path d="M96 214 H132 V78 H508 V116" stroke="var(--accent)" stroke-width="3"></path>
+          <path d="M430 196 H452 V266 H472" stroke="var(--accent)" stroke-width="3"></path>
+          <path d="M502 266 H532 V202 H556" stroke="var(--accent)" stroke-width="3"></path>
+          <path d="M430 150 H470" stroke="var(--accent)" stroke-width="3"></path>
+          <path d="M508 168 V196 H468 V214" stroke="var(--accent)" stroke-width="3"></path>
+
+          <!-- vias -->
+          <circle cx="150" cy="300" r="5" fill="#0F0F11" stroke="#6E6E72" stroke-width="2"></circle>
+          <circle cx="330" cy="360" r="5" fill="#0F0F11" stroke="#6E6E72" stroke-width="2"></circle>
+          <circle cx="132" cy="140" r="5" fill="#0F0F11" stroke="#6E6E72" stroke-width="2"></circle>
+
+          <!-- mounting holes -->
+          <circle cx="62" cy="62" r="11" fill="#0A0A0B" stroke="#4A4A4E" stroke-width="2"></circle>
+          <circle cx="598" cy="62" r="11" fill="#0A0A0B" stroke="#4A4A4E" stroke-width="2"></circle>
+          <circle cx="62" cy="398" r="11" fill="#0A0A0B" stroke="#4A4A4E" stroke-width="2"></circle>
+          <circle cx="598" cy="398" r="11" fill="#0A0A0B" stroke="#4A4A4E" stroke-width="2"></circle>
+
+          <!-- J1 USB-C on left edge -->
+          <rect x="24" y="180" width="72" height="72" fill="#141416" stroke="#6E6E72" stroke-width="1.5"></rect>
+          <rect x="34" y="196" width="8" height="40" fill="#3A3A3E"></rect>
+          <rect x="48" y="196" width="8" height="40" fill="#3A3A3E"></rect>
+          <rect x="86" y="204" width="10" height="12" fill="var(--accent)"></rect>
+          <rect x="86" y="258" width="10" height="12" fill="#56565A"></rect>
+          <text x="106" y="176" fill="#A8A8AC" font-family="IBM Plex Mono, Menlo, monospace" font-size="11">J1</text>
+          <text x="106" y="190" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">USB-C</text>
+
+          <!-- U1 ESP32-S3 module -->
+          <rect x="170" y="110" width="260" height="180" fill="#141416" stroke="#8A8A8E" stroke-width="1.5"></rect>
+          <rect x="186" y="126" width="228" height="112" fill="#0F0F11" stroke="#4A4A4E"></rect>
+          <text x="300" y="180" text-anchor="middle" fill="#A8A8AC" font-family="IBM Plex Mono, Menlo, monospace" font-size="13" letter-spacing="1">ESP32-S3</text>
+          <text x="300" y="198" text-anchor="middle" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="10">WROOM-1 · N8R2</text>
+          <text x="300" y="264" text-anchor="middle" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="11">U1</text>
+          <!-- castellated pads -->
+          <rect x="162" y="130" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="162" y="150" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="162" y="170" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="162" y="190" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="162" y="210" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="162" y="230" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="422" y="145" width="16" height="9" fill="var(--accent)"></rect>
+          <rect x="422" y="165" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="422" y="191" width="16" height="9" fill="var(--accent)"></rect>
+          <rect x="422" y="211" width="16" height="9" fill="#3A3A3E"></rect>
+          <rect x="422" y="231" width="16" height="9" fill="#3A3A3E"></rect>
+
+          <!-- U2 regulator SOT-23 -->
+          <rect x="470" y="116" width="46" height="30" fill="#141416" stroke="#8A8A8E" stroke-width="1.5"></rect>
+          <rect x="464" y="120" width="10" height="9" fill="var(--accent)"></rect>
+          <rect x="464" y="134" width="10" height="9" fill="#3A3A3E"></rect>
+          <rect x="512" y="127" width="10" height="9" fill="var(--accent)"></rect>
+          <text x="528" y="132" fill="#A8A8AC" font-family="IBM Plex Mono, Menlo, monospace" font-size="11">U2</text>
+          <text x="528" y="146" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">MCP1700</text>
+
+          <!-- C1 / C2 -->
+          <rect x="470" y="190" width="14" height="20" fill="#3A3A3E"></rect>
+          <rect x="494" y="190" width="14" height="20" fill="#3A3A3E"></rect>
+          <rect x="484" y="194" width="10" height="12" fill="#1E1E21" stroke="#6E6E72"></rect>
+          <text x="520" y="205" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">C1 1µF</text>
+
+          <!-- R1 100R — added on WIRE's warning -->
+          <rect x="470" y="256" width="14" height="20" fill="var(--accent)"></rect>
+          <rect x="488" y="256" width="14" height="20" fill="var(--accent)"></rect>
+          <rect x="482" y="260" width="8" height="12" fill="#1E1E21" stroke="#8A8A8E"></rect>
+          <text x="470" y="294" fill="var(--accent)" font-family="IBM Plex Mono, Menlo, monospace" font-size="10">R1 100R</text>
+          <text x="470" y="308" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">added from WIRE</text>
+
+          <!-- J2 soil probe header -->
+          <rect x="548" y="180" width="34" height="88" fill="#141416" stroke="#6E6E72" stroke-width="1.5"></rect>
+          <circle cx="565" cy="200" r="7" fill="#0F0F11" stroke="var(--accent)" stroke-width="2"></circle>
+          <circle cx="565" cy="224" r="7" fill="#0F0F11" stroke="#6E6E72" stroke-width="2"></circle>
+          <circle cx="565" cy="248" r="7" fill="#0F0F11" stroke="#6E6E72" stroke-width="2"></circle>
+          <text x="548" y="172" fill="#A8A8AC" font-family="IBM Plex Mono, Menlo, monospace" font-size="11">J2</text>
+          <text x="592" y="204" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">SIG</text>
+          <text x="592" y="228" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">3V3</text>
+          <text x="592" y="252" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">GND</text>
+
+          <!-- D1 status LED -->
+          <rect x="200" y="330" width="16" height="22" fill="#3A3A3E"></rect>
+          <rect x="224" y="330" width="16" height="22" fill="#3A3A3E"></rect>
+          <text x="200" y="370" fill="#56565A" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">D1 STATUS</text>
+
+          <!-- DRC marker -->
+          <circle cx="560" cy="330" r="18" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 4"></circle>
+          <text x="536" y="366" fill="var(--accent)" font-family="IBM Plex Mono, Menlo, monospace" font-size="9">DRC-2</text>
+
+          <!-- silkscreen -->
+          <text x="330" y="76" text-anchor="middle" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" letter-spacing="2">SMART PLANT · REV B</text>
+          <text x="330" y="416" text-anchor="middle" fill="#4A4A4E" font-family="IBM Plex Mono, Menlo, monospace" font-size="9" letter-spacing="1">BENCH 2026 · 2 LAYER</text>
+
+          <!-- dimensions -->
+          <path d="M30 458 H630 M30 452 v12 M630 452 v12" stroke="#3A3A3E" stroke-width="1"></path>
+          <text x="330" y="480" text-anchor="middle" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="10">48.0 mm</text>
+          <path d="M654 30 V430 M648 30 h12 M648 430 h12" stroke="#3A3A3E" stroke-width="1"></path>
+          <text x="668" y="234" text-anchor="middle" fill="#6E6E72" font-family="IBM Plex Mono, Menlo, monospace" font-size="10" transform="rotate(90 668 234)">32.0 mm</text>
+        </svg>
+
+        <!-- zoom chrome -->
+        <div style="position: absolute; right: 24px; bottom: 18px; display: flex; align-items: center; gap: 6px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 14px;">−</div>
+          <div style="display: flex; align-items: center; justify-content: center; height: 28px; padding: 0 10px; border: 1px solid #2A2A2D; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; color: #A8A8AC;">140%</div>
+          <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 14px;">+</div>
+        </div>
+      </div>
+
+      <!-- scoped agent input -->
+      <div style="border-top: 1px solid #232325; padding: 12px 24px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1px; padding: 4px 8px; border: 1px solid #2A2A2D; color: #F4F4F2;">@BOARD</span>
+        <div style="flex-grow: 1; display: flex; align-items: center; gap: 10px; height: 42px; border: 1px solid #2A2A2D; background: #121214; padding: 0 6px 0 14px;">
+          <span style="flex-grow: 1; font-size: 13.5px; color: #6E6E72;">Move J2 to the short edge and re-route…</span>
+          <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--accent);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2.2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — DRC + SPEC -->
+    <div style="width: 360px; flex-shrink: 0; border-left: 1px solid #232325; display: flex; flex-direction: column; overflow: hidden;">
+
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">CONTEXT</span>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1px; padding: 2px 6px; border: 1px solid var(--accent); color: var(--accent);">BOARD</span>
+        <div style="flex-grow: 1;"></div>
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #6E6E72;">rev B · draft 3</span>
+      </div>
+
+      <div style="display: flex; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #F4F4F2; border-bottom: 2px solid var(--accent);">DRC</div>
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #6E6E72; border-bottom: 2px solid transparent;">STACKUP</div>
+        <div style="flex: 1; text-align: center; padding: 11px 0 9px 0; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: 1.5px; color: #6E6E72; border-bottom: 2px solid transparent;">BOM</div>
+      </div>
+
+      <!-- routing progress -->
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #232325; flex-shrink: 0;">
+        <div style="display: flex; align-items: baseline;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">ROUTING · PASS 3</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: var(--accent);">42 / 52</span>
+        </div>
+        <div style="height: 4px; background: #232325;">
+          <div style="height: 4px; width: 81%; background: var(--accent);"></div>
+        </div>
+      </div>
+
+      <!-- DRC results -->
+      <div style="display: flex; flex-direction: column; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #1A1A1C;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6E6E72" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span style="font-size: 13px; color: #A8A8AC;">0 errors</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; color: #56565A;">clearance · shorts · width</span>
+        </div>
+
+        <div style="display: flex; gap: 11px; padding: 13px 20px; border-bottom: 1px solid #1A1A1C;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><path d="M12 3 2 20h20z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-size: 13px; color: #F4F4F2;">DRC-1 · Edge clearance</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; line-height: 1.45; color: #6E6E72;">GND pour 0.18 mm from board edge<br>house rule: 0.30 mm min</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 11px; padding: 13px 20px; border-bottom: 1px solid #232325; background: #141416;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><path d="M12 3 2 20h20z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-size: 13px; color: #F4F4F2;">DRC-2 · Antenna keepout</span>
+            <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11px; line-height: 1.45; color: #6E6E72;">copper under the WROOM antenna<br>module datasheet requires clear</span>
+            <div style="display: flex; gap: 8px; padding-top: 6px;">
+              <div style="display: flex; align-items: center; height: 28px; padding: 0 12px; background: var(--accent); color: #0A0A0B; font-size: 11px; font-weight: 700; letter-spacing: 1px;">FIX IT</div>
+              <div style="display: flex; align-items: center; height: 28px; padding: 0 12px; border: 1px solid #2A2A2D; color: #A8A8AC; font-size: 11px; font-weight: 600; letter-spacing: 1px;">SHOW ME</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- spec -->
+      <div style="display: flex; flex-direction: column; gap: 9px; padding: 16px 20px; flex-grow: 1; min-height: 0;">
+        <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 10px; letter-spacing: 1.5px; color: #6E6E72;">BOARD SPEC</span>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Outline</span><span style="color: #F4F4F2;">48.0 × 32.0 mm</span>
+        </div>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Layers</span><span style="color: #F4F4F2;">2 · 1.6 mm FR4</span>
+        </div>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Min trace / space</span><span style="color: #F4F4F2;">0.20 / 0.20 mm</span>
+        </div>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Vias</span><span style="color: #F4F4F2;">0.6 / 0.3 mm · 3</span>
+        </div>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Mount holes</span><span style="color: #F4F4F2;">4 × M2.5</span>
+        </div>
+        <div style="display: flex; font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 11.5px;">
+          <span style="width: 130px; color: #6E6E72;">Fab house</span><span style="color: #F4F4F2;">JLCPCB · 2 layer</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #232325; flex-shrink: 0;">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-right: 1px solid #232325;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">PARTS</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">11</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-right: 1px solid #232325;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">EST. BUILD</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">$4.<span style="font-size: 11px;">12</span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px;">
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 9px; letter-spacing: 1px; color: #6E6E72;">LEAD TIME</span>
+          <span style="font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 15px; color: #F4F4F2;">6<span style="font-size: 10px; color: #6E6E72;"> days</span></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#CCFF00","options":["#CCFF00","#FF4D00","#00E5FF"],"section":"Theme"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#CCFF00' };
+  }
+}
+</script>
+</body>
+</html>
