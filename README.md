@@ -152,7 +152,7 @@ pnpm nosana:status
 pnpm nosana:stop
 ```
 
-`nosana:deploy` updates `.env.local`; restart the Next.js process afterward. Agent activity should then report `provider=nosana` for all four specialist calls.
+`nosana:deploy` updates `.env.local`; restart the Next.js process afterward. Agent activity should then report `provider=nosana` for all four specialist calls. `nosana:stop` returns `MODEL_PROVIDER` to `mock` so the local app remains usable without calling a stopped endpoint.
 
 ## Run
 

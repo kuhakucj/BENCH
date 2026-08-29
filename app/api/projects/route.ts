@@ -76,11 +76,55 @@ export async function POST(request: Request) {
       warnings: [...hardware.output.constraints, ...circuit.output.warnings]
     };
 
-    const compile = await runDaytonaCompileLoop(initialSpec, 2);
+    let compile = await runDaytonaCompileLoop(initialSpec, 2);
     events.push(...compile.events);
 
     events.push({ role: "Supervisor", status: "running", message: "Checking hardware, wiring, firmware, voltage, and build consistency" });
-    const supervised = await supervisorAgent(compile.spec);
+    let supervised = await supervisorAgent(compile.spec);
+
+    if (!compile.spec.verification.verified || !supervised.output.verified) {
+      const corrections = [...new Set([...supervised.output.correctionsNeeded, ...supervised.output.findings])];
+      events.push({
+        role: "Supervisor",
+        status: "running",
+        message: "Routing consistency corrections back through the specialist agents",
+        detail: `provider=${supervised.provider}`
+      });
+
+      events.push({ role: "Hardware Architect", status: "running", message: "Revising BOM and power constraints from supervisor findings" });
+      const revisedHardware = await hardwareAgent(idea, corrections);
+      events.push({ role: "Hardware Architect", status: "ok", message: `Revised ${revisedHardware.output.selectedMcu} hardware plan`, detail: `provider=${revisedHardware.provider}` });
+
+      events.push({ role: "Wiring Engineer", status: "running", message: "Correcting exact circuit topology from supervisor findings" });
+      const revisedCircuit = await wiringAgent(idea, revisedHardware.output, corrections);
+      events.push({ role: "Wiring Engineer", status: "ok", message: `Revised ${revisedCircuit.output.connections.length} circuit connections`, detail: `provider=${revisedCircuit.provider}` });
+
+      events.push({ role: "Firmware Engineer", status: "running", message: "Regenerating firmware against the corrected circuit" });
+      const revisedFirmware = await firmwareAgent(idea, revisedHardware.output, revisedCircuit.output, undefined, corrections);
+      events.push({ role: "Firmware Engineer", status: "ok", message: `Regenerated ${revisedFirmware.output.files.length} firmware files`, detail: `provider=${revisedFirmware.provider}` });
+
+      const revisedSpec: ProjectSpec = {
+        ...compile.spec,
+        phase: "VERIFICATION",
+        hardware: revisedHardware.output,
+        circuit: revisedCircuit.output,
+        firmware: revisedFirmware.output,
+        verification: {
+          verified: false,
+          compileProvider: "daytona",
+          attempts: 0,
+          logs: [],
+          supervisorFindings: corrections
+        },
+        warnings: [...revisedHardware.output.constraints, ...revisedCircuit.output.warnings]
+      };
+
+      compile = await runDaytonaCompileLoop(revisedSpec, 2);
+      events.push(...compile.events);
+      events.push({ role: "Supervisor", status: "running", message: "Rechecking corrected hardware, wiring, firmware, and Daytona build" });
+      supervised = await supervisorAgent(compile.spec);
+    }
+
     const finalSpec: ProjectSpec = {
       ...compile.spec,
       phase: compile.spec.verification.verified && supervised.output.verified ? "READY_TO_BUILD" : "NEEDS_REPAIR",

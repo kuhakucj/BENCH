@@ -215,6 +215,8 @@ async function stop() {
   } else {
     console.log(`Nosana deployment ${deployment.id} is already ${deployment.status}.`);
   }
+  await setLocalEnv({ MODEL_PROVIDER: "mock" });
+  console.log("Local MODEL_PROVIDER set to mock until the Nosana deployment is started again.");
 }
 
 switch (command) {
